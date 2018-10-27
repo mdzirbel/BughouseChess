@@ -12,21 +12,21 @@ public class ChessBoard {
     HashMap<ChessPiece, Integer> whiteReserve = new HashMap<>();
     HashMap<ChessPiece, Integer> blackReserve = new HashMap<>();
     Pair<Integer, Integer> currentlySelectedBoard = new MutablePair<>(-1, -1);
-    Pair<String, Integer> currentlySelectedReserve = new MutablePair<>("", -1);
+    Pair<String, String> currentlySelectedReserve = new MutablePair<>("", "");
 
     public ChessBoard(String colorNear) {
         //TODO - handle en passant and castling
         currentlySelectedBoard = null;
         currentlySelectedReserve = null;
-        ChessPiece[] col1 = {new ChessPiece("b", "r"), new ChessPiece("b", "p"), null, null, null, null, new ChessPiece("w", "p"), new ChessPiece("w", "r")};
-        ChessPiece[] col2 = {new ChessPiece("b", "kn"), new ChessPiece("b", "p"), null, null, null, null, new ChessPiece("w", "p"), new ChessPiece("w", "kn")};
-        ChessPiece[] col3 = {new ChessPiece("b", "b"), new ChessPiece("b", "p"), null, null, null, null, new ChessPiece("w", "p"), new ChessPiece("w", "b")};
-        ChessPiece[] col4 = {new ChessPiece("b", "q"), new ChessPiece("b", "p"), null, null, null, null, new ChessPiece("w", "p"), new ChessPiece("w", "q")};
-        ChessPiece[] col5 = {new ChessPiece("b", "k"), new ChessPiece("b", "p"), null, null, null, null, new ChessPiece("w", "p"), new ChessPiece("w", "k")};
-        ChessPiece[] col6 = {new ChessPiece("b", "b"), new ChessPiece("b", "p"), null, null, null, null, new ChessPiece("w", "p"), new ChessPiece("w", "b")};
-        ChessPiece[] col7 = {new ChessPiece("b", "kn"), new ChessPiece("b", "p"), null, null, null, null, new ChessPiece("w", "p"), new ChessPiece("w", "kn")};
-        ChessPiece[] col8 = {new ChessPiece("b", "r"), new ChessPiece("b", "p"), null, null, null, null, new ChessPiece("w", "p"), new ChessPiece("w", "r")};
-        board[0] = col1; board[1] = col2; board[2] = col3; board[3] = col4; board[4] = col5; board[5] = col6; board[6] = col7; board[7] = col8;
+        ChessPiece[] col0 = {new ChessPiece("b", "r"), new ChessPiece("b", "p"), null, null, null, null, new ChessPiece("w", "p"), new ChessPiece("w", "r")};
+        ChessPiece[] col1 = {new ChessPiece("b", "kn"), new ChessPiece("b", "p"), null, null, null, null, new ChessPiece("w", "p"), new ChessPiece("w", "kn")};
+        ChessPiece[] col2 = {new ChessPiece("b", "b"), new ChessPiece("b", "p"), null, null, null, null, new ChessPiece("w", "p"), new ChessPiece("w", "b")};
+        ChessPiece[] col3 = {new ChessPiece("b", "q"), new ChessPiece("b", "p"), null, null, null, null, new ChessPiece("w", "p"), new ChessPiece("w", "q")};
+        ChessPiece[] col4 = {new ChessPiece("b", "k"), new ChessPiece("b", "p"), null, null, null, null, new ChessPiece("w", "p"), new ChessPiece("w", "k")};
+        ChessPiece[] col5 = {new ChessPiece("b", "b"), new ChessPiece("b", "p"), null, null, null, null, new ChessPiece("w", "p"), new ChessPiece("w", "b")};
+        ChessPiece[] col6 = {new ChessPiece("b", "kn"), new ChessPiece("b", "p"), null, null, null, null, new ChessPiece("w", "p"), new ChessPiece("w", "kn")};
+        ChessPiece[] col7 = {new ChessPiece("b", "r"), new ChessPiece("b", "p"), null, null, null, null, new ChessPiece("w", "p"), new ChessPiece("w", "r")};
+        board[0] = col0; board[1] = col1; board[2] = col2; board[3] = col3; board[4] = col4; board[5] = col5; board[6] = col6; board[7] = col7;
         if (colorNear.equals("b") || colorNear.equals("black")) {
             flipBoard();
         }
@@ -54,8 +54,10 @@ public class ChessBoard {
             if (currentlySelectedReserve==null) {
                 currentlySelectedBoard = new MutablePair<>(x, y); // Selecting a piece
             }
-            else { // Placing a piece from reserve
-
+            else { // Placing a piece from reserve //TODO
+                if (currentlySelectedReserve.getLeft().equals("white")) {
+                    decrementReserve("white", );
+                }
             }
         }
         else { // Has piece selected, attempting a move
@@ -89,14 +91,26 @@ public class ChessBoard {
     }
     public void recieveReserve(String team, String type) {
         team = HelperFunctions.unAbbrevTeam(team);
+        incrementReserve(team, type);
+    }
+    private void incrementReserve(String team, String type) {
+        team = HelperFunctions.unAbbrevTeam(team);
+        type = HelperFunctions.unAbbrevType(type);
         if (team.equals("white")) {
-            whiteReserve.put(new ChessPiece(team, type), whiteReserve.get(new ChessPiece(team, type))+1); // increment the white reserve of the correct type
+            whiteReserve.put(new ChessPiece(team, type), whiteReserve.get(new ChessPiece(team, type))+1);
         }
         else if (team.equals("black")) {
-            blackReserve.put(new ChessPiece(team, type), blackReserve.get(new ChessPiece(team, type))+1); // increment the black reserve of the correct type
+            blackReserve.put(new ChessPiece(team, type), blackReserve.get(new ChessPiece(team, type))+1);
         }
-        else {
-            assert false : "Nice try Max. Green is an alliance, not a team name.";
+    }
+    private void decrementReserve(String team, String type) {
+        team = HelperFunctions.unAbbrevTeam(team);
+        type = HelperFunctions.unAbbrevType(type);
+        if (team.equals("white")) {
+            whiteReserve.put(new ChessPiece(team, type), whiteReserve.get(new ChessPiece(team, type))-1);
+        }
+        else if (team.equals("black")) {
+            blackReserve.put(new ChessPiece(team, type), blackReserve.get(new ChessPiece(team, type))-1);
         }
     }
     private ChessPiece getTileFromPair(Pair<Integer, Integer> p){
