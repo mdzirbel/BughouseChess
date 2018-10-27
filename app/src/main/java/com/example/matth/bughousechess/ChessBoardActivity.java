@@ -14,7 +14,7 @@ public class ChessBoardActivity extends AppCompatActivity {
     // class member variable to save the X,Y coordinates
     private float[] lastTouchDownXY = new float[2];
     // class member to save board variable
-    private ChessBoard board = new ChessBoard(null);
+    static ChessBoard board = new ChessBoard(null);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
