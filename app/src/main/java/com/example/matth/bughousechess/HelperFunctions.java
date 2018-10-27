@@ -1,3 +1,5 @@
+package com.example.matth.bughousechess;
+
 public class HelperFunctions {
 
     public static String unAbbrevType(String type) {

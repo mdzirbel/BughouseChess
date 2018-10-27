@@ -1,11 +1,13 @@
+package com.example.matth.bughousechess;
+
 import java.util.Arrays;
-import java.util.HashMap;
 
 public class ChessPiece {
 
     String teams[] = {"white", "black"};
     String pieces[] = {"pawn", "rook", "knight", "bishop", "king", "queen"};
     String type;
+    String
     String team;
 
     public ChessPiece(String team, String type) {
