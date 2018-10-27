@@ -54,10 +54,8 @@ public class ChessBoard {
             if (currentlySelectedReserve==null) {
                 currentlySelectedBoard = new MutablePair<>(x, y); // Selecting a piece
             }
-            else { // Placing a piece from reserve //TODO
-                if (currentlySelectedReserve.getLeft().equals("white")) {
-                    decrementReserve("white", );
-                }
+            else { // Placing a piece from reserve
+                decrementReserve(currentlySelectedReserve.getLeft(), currentlySelectedReserve.getRight());
             }
         }
         else { // Has piece selected, attempting a move
@@ -128,6 +126,8 @@ public class ChessBoard {
             case ("pawn"):
 
         }
+
+        return null;
 
     }
 
