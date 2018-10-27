@@ -1,15 +1,19 @@
 package com.example.matth.bughousechess;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Message;
-import android.support.v7.widget.RecyclerView;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -31,6 +35,7 @@ import java.util.UUID;
 
 public class Communications
 {
+    ConnectedThread conThread;
     private static final String TAG = "MY_APP_DEBUG_TAG";
     static LinkedList<BluetoothDevice> candidateDevices = new LinkedList<BluetoothDevice>();
     public Communications(Context context, MainActivity.MyAdapter dataAdapter)
@@ -75,20 +80,48 @@ public class Communications
             e.printStackTrace();
         }
     }
-    public void receiveConnectionFrom(BluetoothSocket sock)
+    public void receiveConnectionFrom(FragmentManager fm, BluetoothSocket sock)
     {
-        try {
+        new FireMissilesDialogFragment().show(fm, "");
+        /*try {
             new ConnectedThread(sock).start();
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
+        }*/
+    }
+    public static class FireMissilesDialogFragment extends DialogFragment {
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            // Use the Builder class for convenient dialog construction
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            builder.setMessage("Do you want to play a game with "+"?")
+                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            // FIRE ZE MISSILES!
+                        }
+                    })
+                    .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            // User cancelled the dialog
+                        }
+                    });
+            // Create the AlertDialog object and return it
+            return builder.create();
         }
     }
-    /*
-        Send reserve piece
-    */
+    void sendReserve(ChessPiece piece)
+    {
+        conThread.write("R\\|"+piece.team+"+"+piece.type);
+    }
     void parse(String str)
     {
-
+        String[] messageParts = str.split("\\|");
+        if(messageParts[0].equals("R"))
+        {
+            String[] parts = messageParts[1].split("\\+");
+            Log.d(TAG, "Reserve receive "+parts[0]+":"+parts[1]);
+            ChessBoardActivity.board.recieveReserve(parts[0], parts[1]);
+        }
     }
     private class ConnectedThread extends Thread
     {

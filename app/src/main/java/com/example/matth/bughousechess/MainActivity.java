@@ -7,11 +7,14 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -30,6 +33,29 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        EditText nameText = (EditText) findViewById(R.id.editTextName);
+
+        nameText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                if(!(charSequence.equals("Name") || charSequence.equals("")))
+                {
+
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
+
         mRecyclerView = (RecyclerView) findViewById(R.id.recyclerView);
 
         // use this setting to improve performance if you know that changes
@@ -48,6 +74,10 @@ public class MainActivity extends AppCompatActivity {
         coms = new Communications(getApplicationContext(), mAdapter);
         new ListenerClass().start();
     }
+    void setButtons(boolean enabled)
+    {
+        
+    }
     class ListenerClass extends Thread
     {
         public void run()
@@ -55,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 BluetoothServerSocket sock = BluetoothAdapter.getDefaultAdapter().listenUsingInsecureRfcommWithServiceRecord("Max's Bluetooth communication system", UUID.fromString("a56f3f83-5b88-4101-9eb1-8109bb9eebb9"));
                 BluetoothSocket socket = sock.accept();
-                coms.receiveConnectionFrom(socket);
+                coms.receiveConnectionFrom(getSupportFragmentManager(),socket);
                 Log.i(TAG, "accepted");
                 //Toast.makeText(getApplicationContext(), sock.toString(), Toast.LENGTH_SHORT).show();
             } catch (IOException e) {
