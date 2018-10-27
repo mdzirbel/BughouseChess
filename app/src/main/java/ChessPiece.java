@@ -9,32 +9,8 @@ public class ChessPiece {
     String team;
 
     public ChessPiece(String team, String type) {
-        if (team.equals("b")) {
-            team = "black";
-        }
-        if (team.equals("w")) {
-            team = "white";
-        }
-        switch (type) {
-            case "p":
-                type = "pawn";
-                break;
-            case "r":
-                type = "rook";
-                break;
-            case "kn":
-                type = "knight";
-                break;
-            case "b":
-                type = "bishop";
-                break;
-            case "k":
-                type = "k";
-                break;
-            case "q":
-                type = "queen";
-                break;
-        }
+        team = HelperFunctions.unAbbrevTeam(team);
+        type = HelperFunctions.unAbbrevType(type);
         assert Arrays.asList(teams).contains(team) : "Not a valid team color";
         assert Arrays.asList(pieces).contains(type) : "Not a valid piece type";
         this.type = type;
