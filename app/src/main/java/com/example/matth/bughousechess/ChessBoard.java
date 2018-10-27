@@ -13,6 +13,7 @@ public class ChessBoard {
     HashMap<ChessPiece, Integer> blackReserve = new HashMap<>();
     Pair<Integer, Integer> currentlySelectedBoard = new MutablePair<>(-1, -1);
     Pair<String, String> currentlySelectedReserve = new MutablePair<>("", "");
+    String currentTurn = "white";
 
     public ChessBoard(String colorNear) {
         //TODO - handle en passant and castling
@@ -51,8 +52,10 @@ public class ChessBoard {
     public void clickOnBoard(int x, int y) {
         Pair<Integer, Integer> attemptedMove = new MutablePair<>(x, y);
         if (currentlySelectedBoard==null) {
-            if (currentlySelectedReserve==null) {
-                currentlySelectedBoard = new MutablePair<>(x, y); // Selecting a piece
+            if (currentlySelectedReserve==null) { // If you don't have a piece selected
+                if (currentTurn.equals(getPieceFromPair(new MutablePair<>(x, y)))) { // If you select one of your pieces
+                    currentlySelectedBoard = new MutablePair<>(x, y); // select piece
+                }
             }
             else { // Placing a piece from reserve
                 decrementReserve(currentlySelectedReserve.getLeft(), currentlySelectedReserve.getRight());
@@ -62,8 +65,8 @@ public class ChessBoard {
             Pair<Integer, Integer>[] allowedMoves = getAllowedMoves();
             if (Arrays.asList(allowedMoves).contains(attemptedMove)) { // If you can move there
                 // Check if you are taking an opponent's piece
-                if (getTileFromPair(attemptedMove)!=null) { // If it's not null it's an opponent's piece
-                    MainActivity.coms.sendReserve(getTileFromPair(attemptedMove)); // TODO add this in once Max makes it
+                if (getPieceFromPair(attemptedMove)!=null) { // If it's not null it's an opponent's piece
+                    MainActivity.coms.sendReserve(getPieceFromPair(attemptedMove)); // TODO add this in once Max makes it
                 }
                 board[x][y] = board[currentlySelectedBoard.getLeft()][currentlySelectedBoard.getRight()]; // Put your piece there
                 board[currentlySelectedBoard.getLeft()][currentlySelectedBoard.getRight()] = null; // Make the space you moved out of empty
@@ -75,7 +78,7 @@ public class ChessBoard {
     }
     public void clickOnReserve() {
         currentlySelectedBoard = null;
-
+        // TODO write this
     }
 
     public ChessPiece[][] getBoard() {
@@ -111,7 +114,7 @@ public class ChessBoard {
             blackReserve.put(new ChessPiece(team, type), blackReserve.get(new ChessPiece(team, type))-1);
         }
     }
-    private ChessPiece getTileFromPair(Pair<Integer, Integer> p){
+    private ChessPiece getPieceFromPair(Pair<Integer, Integer> p){
         return board[p.getLeft()][p.getRight()];
     }
     private void deselect() {
@@ -127,7 +130,7 @@ public class ChessBoard {
 
         }
 
-        return null;
+        return new MutablePair[5];
 
     }
 
