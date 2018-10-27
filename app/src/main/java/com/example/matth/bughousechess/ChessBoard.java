@@ -48,6 +48,7 @@ public class ChessBoard {
             ArrayUtils.reverse(col);
         }
     }
+
     public void clickOnBoard(int x, int y) {
         Pair<Integer, Integer> attemptedMove = new MutablePair<>(x, y);
         if (currentlySelectedBoard==null) {
@@ -75,24 +76,28 @@ public class ChessBoard {
             }
         }
     }
+
     public void clickOnReserve() {
         currentlySelectedBoard = null;
-
     }
 
     public ChessPiece[][] getBoard() {
         return board;
     }
+
     public HashMap<ChessPiece, Integer> getWhiteReserve() {
         return whiteReserve;
     }
+
     public HashMap<ChessPiece, Integer> getBlackReserve() {
         return blackReserve;
     }
+
     public void recieveReserve(String team, String type) {
         team = HelperFunctions.unAbbrevTeam(team);
         incrementReserve(team, type);
     }
+
     private void incrementReserve(String team, String type) {
         team = HelperFunctions.unAbbrevTeam(team);
         type = HelperFunctions.unAbbrevType(type);
@@ -103,6 +108,7 @@ public class ChessBoard {
             blackReserve.put(new ChessPiece(team, type), blackReserve.get(new ChessPiece(team, type))+1);
         }
     }
+
     private void decrementReserve(String team, String type) {
         team = HelperFunctions.unAbbrevTeam(team);
         type = HelperFunctions.unAbbrevType(type);
@@ -113,9 +119,11 @@ public class ChessBoard {
             blackReserve.put(new ChessPiece(team, type), blackReserve.get(new ChessPiece(team, type))-1);
         }
     }
+
     private ChessPiece getTileFromPair(Pair<Integer, Integer> p){
         return board[p.getLeft()][p.getRight()];
     }
+
     private void deselect() {
         currentlySelectedBoard = null;
         currentlySelectedReserve = null;
@@ -128,7 +136,6 @@ public class ChessBoard {
             case ("pawn"):
 
         }
-
     }
 
 }

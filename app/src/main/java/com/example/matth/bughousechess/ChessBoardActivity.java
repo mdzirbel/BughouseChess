@@ -1,5 +1,6 @@
 package com.example.matth.bughousechess;
 
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MotionEvent;
 import android.os.Bundle;
@@ -14,7 +15,7 @@ public class ChessBoardActivity extends AppCompatActivity {
     // class member variable to save the X,Y coordinates
     private float[] lastTouchDownXY = new float[2];
     // class member to save board variable
-    private ChessBoard board = new ChessBoard(null);
+    public static ChessBoard board = new ChessBoard(null);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +38,8 @@ public class ChessBoardActivity extends AppCompatActivity {
         TableRow bottomRow = findViewById(R.id.bottomReserve);
         int[] topLeftBottomRow = new int[2];
         bottomRow.getLocationOnScreen(topLeftBottomRow);
+
+        displayBoard();
     }
 
     private View.OnTouchListener touchListener = new View.OnTouchListener() {
@@ -69,8 +72,19 @@ public class ChessBoardActivity extends AppCompatActivity {
     };
 
     // TODO - finish this method (with board and maybe top/bottom rows)
-    public void updateBoard() {
+    public void displayBoard() {
+        // Fill reserve rows, place piece
+        displayPiece(0, 0);
 
+    }
+
+    // need method that places a piece on board display piece with coords
+    public void displayPiece(int xPosBoard, int yPosBoard) {
+        // int xPosToRender
+        ImageView newPiece = new ImageView(this);
+        newPiece.setImageResource(R.drawable.blackbishoppiece);
+        ConstraintLayout chessBoardView = findViewById(R.id.chessboardview);
+        chessBoardView.addView(newPiece);
     }
 }
 

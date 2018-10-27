@@ -2,6 +2,7 @@
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/chessboardview"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ChessBoardActivity"
@@ -48,18 +49,18 @@
         app:layout_constraintGuide_percent="0.85" />
 
     <TableRow
-        android:id="@+id/topReserve"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:id="@+id/topReserve"
         app:layout_constraintBottom_toTopOf="@+id/topImageGuide"
         app:layout_constraintEnd_toStartOf="@+id/rightImageGuide"
         app:layout_constraintStart_toEndOf="@+id/leftImageGuide"
         app:layout_constraintTop_toTopOf="@+id/guideline7" />
 
     <TableRow
-        android:id="@+id/bottomReserve"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:id="@+id/bottomReserve"
         app:layout_constraintBottom_toTopOf="@+id/guideline6"
         app:layout_constraintEnd_toStartOf="@+id/rightImageGuide"
         app:layout_constraintStart_toStartOf="@+id/leftImageGuide"
