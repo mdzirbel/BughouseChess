@@ -98,8 +98,9 @@ public class ChessBoardActivity extends AppCompatActivity {
         int yPosToRender = (imageViewWidthHeight[1] / 8 * yPosBoard);
 
         ImageView newPiece = new ImageView(this);
+        newPiece.getHeight();
+
         newPiece.setImageResource(R.drawable.blackbishoppiece);
-        newPiece.setElevation(5);
         newPiece.setId(3+1);
 
         ConstraintLayout layout = findViewById(R.id.chessboardview);
