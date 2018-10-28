@@ -86,7 +86,7 @@ public class ChessBoardActivity extends AppCompatActivity {
     // TODO - finish this method (with board and maybe top/bottom rows)
     public void displayBoard() {
         // Fill reserve rows, place piece
-        displayPiece(1, 1);
+        displayPiece(500, 500);
 
     }
 
@@ -99,7 +99,7 @@ public class ChessBoardActivity extends AppCompatActivity {
         int xPosToRender = (int) (width * .02 + imageViewWidthHeight[0] / 8 * xPosBoard);
         int yPosToRender = (int) (height * .02 + imageViewWidthHeight[1] / 8 * yPosBoard);
         ImageView newPiece = new ImageView(this);
-        newPiece.setId(3);
+        newPiece.setId(3 + 0);
         newPiece.setImageResource(R.drawable.blackbishoppiece);
         ConstraintLayout chessBoardView = findViewById(R.id.chessboardview);
         ImageView chessBoardImage = findViewById(R.id.boardImage);
