@@ -8,11 +8,10 @@
     tools:context=".ChessBoardActivity"
     tools:layout_editor_absoluteY="81dp">
 
-
     <ImageView
         android:id="@+id/boardImage"
-        android:layout_width="367dp"
-        android:layout_height="356dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:contentDescription="image for board"
         app:layout_constraintBottom_toTopOf="@+id/topBottomReserveGuide"
         app:layout_constraintEnd_toStartOf="@+id/rightImageGuide"
@@ -78,6 +77,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_begin="10dp" />
+        app:layout_constraintGuide_percent="0.02" />
 
 </android.support.constraint.ConstraintLayout>

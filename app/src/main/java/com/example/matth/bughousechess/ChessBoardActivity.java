@@ -2,6 +2,7 @@ package com.example.matth.bughousechess;
 
 import android.support.constraint.ConstraintLayout;
 import android.support.constraint.ConstraintSet;
+import android.support.v4.view.ViewCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MotionEvent;
 import android.os.Bundle;
@@ -32,28 +33,29 @@ public class ChessBoardActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chess_board);
 
-        // Instantiate ImageView object, set touch/click listener, get coords of top left
-        ImageView imageView = findViewById(R.id.boardImage);
-        imageView.setOnTouchListener(touchListener);
-        imageView.setOnClickListener(clickListener);
-        imageViewWidthHeight[0] = imageView.getWidth();
-        imageViewWidthHeight[1] = imageView.getHeight();
-        imageView.getLocationOnScreen(topLeftCoordsImageView);
 
-        // Instantiate top TableRow object, get coords of top left
-        TableRow topRow = findViewById(R.id.topReserve);
-        topRowWidthHeight[0] = topRow.getWidth();
-        topRowWidthHeight[1] = topRow.getHeight();
-        topRow.getLocationOnScreen(topLeftCoordsTopRow);
-
-        // Instantiate bottom TableRow object, get coords of top left
-        TableRow bottomRow = findViewById(R.id.bottomReserve);
-        bottomRowWidthHeight[0] = topRow.getWidth();
-        bottomRowWidthHeight[1] = topRow.getHeight();
-        bottomRow.getLocationOnScreen(topLeftCoordsBottomRow);
-        imageView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+        findViewById(R.id.chessboardview).post(new Runnable() {
             @Override
-            public void onGlobalLayout() {
+            public void run() {
+                // Instantiate ImageView object, set touch/click listener, get coords of top left
+                ImageView imageView = findViewById(R.id.boardImage);
+                imageView.setOnTouchListener(touchListener);
+                imageView.setOnClickListener(clickListener);
+                imageViewWidthHeight[0] = imageView.getWidth();
+                imageViewWidthHeight[1] = imageView.getHeight();
+                imageView.getLocationOnScreen(topLeftCoordsImageView);
+
+                // Instantiate top TableRow object, get coords of top left
+                TableRow topRow = findViewById(R.id.topReserve);
+                topRowWidthHeight[0] = topRow.getWidth();
+                topRowWidthHeight[1] = topRow.getHeight();
+                topRow.getLocationOnScreen(topLeftCoordsTopRow);
+
+                // Instantiate bottom TableRow object, get coords of top left
+                TableRow bottomRow = findViewById(R.id.bottomReserve);
+                bottomRowWidthHeight[0] = topRow.getWidth();
+                bottomRowWidthHeight[1] = topRow.getHeight();
+                bottomRow.getLocationOnScreen(topLeftCoordsBottomRow);
                 displayBoard();
             }
         });
@@ -93,7 +95,13 @@ public class ChessBoardActivity extends AppCompatActivity {
     // TODO - finish this method (with board and maybe top/bottom rows)
     public void displayBoard() {
         // Fill reserve rows, place piece
-        displayPiece(1, 1);
+        ChessPiece[][] currentBoard = board.getBoard();
+        for (int x = 0; x < 8; x++) {
+            for (int y = 0; y < 8; y++) {
+                displayPiece(x, y);
+            }
+        }
+
 
     }
 
@@ -106,9 +114,10 @@ public class ChessBoardActivity extends AppCompatActivity {
         int yPosToRender = (imageViewWidthHeight[1] / 8 * yPosBoard);
 
         ImageView newPiece = new ImageView(this);
+        newPiece.getHeight();
+
         newPiece.setImageResource(R.drawable.blackbishoppiece);
-        newPiece.setId(3+1);
-        newPiece.setScaleType(ImageView.ScaleType.FIT_XY);
+        newPiece.setId(xPosBoard * 10 + yPosBoard);
 
         ConstraintLayout layout = findViewById(R.id.chessboardview);
         layout.addView(newPiece);
@@ -119,10 +128,10 @@ public class ChessBoardActivity extends AppCompatActivity {
         constraintSet.connect(newPiece.getId(), ConstraintSet.TOP, R.id.boardImage, ConstraintSet.TOP, yPosToRender);
         constraintSet.applyTo(layout);
 
-        Log.e("WIDTH","Width: "+findViewById(R.id.chessboardview).getWidth());
+        Log.e("WIDTH","Width: " + findViewById(R.id.chessboardview).getWidth());
 
         ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) newPiece.getLayoutParams();
-        params.height = (int) (findViewById(R.id.boardImage).getHeight()/8.0);
-        params.width = (int) (findViewById(R.id.boardImage).getWidth()/8.0);
+        params.height = (int) (findViewById(R.id.boardImage).getHeight() / 8.0);
+        params.width = (int) (findViewById(R.id.boardImage).getWidth() / 8.0);
     }
 }
