@@ -14,7 +14,7 @@
         android:layout_width="367dp"
         android:layout_height="356dp"
         android:contentDescription="image for board"
-        app:layout_constraintBottom_toTopOf="@+id/guideline5"
+        app:layout_constraintBottom_toTopOf="@+id/topBottomReserveGuide"
         app:layout_constraintEnd_toStartOf="@+id/rightImageGuide"
         app:layout_constraintStart_toStartOf="@+id/leftImageGuide"
         app:layout_constraintTop_toTopOf="@+id/topImageGuide"
@@ -42,7 +42,7 @@
         app:layout_constraintGuide_percent="0.98" />
 
     <android.support.constraint.Guideline
-        android:id="@+id/guideline5"
+        android:id="@+id/topBottomReserveGuide"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -64,20 +64,20 @@
         app:layout_constraintBottom_toTopOf="@+id/guideline6"
         app:layout_constraintEnd_toStartOf="@+id/rightImageGuide"
         app:layout_constraintStart_toStartOf="@+id/leftImageGuide"
-        app:layout_constraintTop_toTopOf="@+id/guideline5" />
+        app:layout_constraintTop_toTopOf="@+id/topBottomReserveGuide" />
 
     <android.support.constraint.Guideline
         android:id="@+id/guideline6"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.98" />
+        app:layout_constraintGuide_percent="0.98043054" />
 
     <android.support.constraint.Guideline
         android:id="@+id/guideline7"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.02" />
+        app:layout_constraintGuide_begin="10dp" />
 
 </android.support.constraint.ConstraintLayout>
