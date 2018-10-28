@@ -34,13 +34,13 @@ public class ChessBoardActivity extends AppCompatActivity {
     ConstraintLayout parentContrainView;
 
     // class member to save board variable
-    public static ChessBoard board = new ChessBoard("w");
+    public static ChessBoard board;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        board = new ChessBoard("w", this);
         setContentView(R.layout.activity_chess_board);
-
         parentContrainView = findViewById(R.id.chessboardview);
 
         parentContrainView.post(new Runnable() {
@@ -65,10 +65,7 @@ public class ChessBoardActivity extends AppCompatActivity {
                 bottomRowWidthHeight[0] = topRow.getWidth();
                 bottomRowWidthHeight[1] = topRow.getHeight();
                 bottomRow.getLocationOnScreen(topLeftCoordsBottomRow);*/
-                updateReserve(board.getBlackReserve(), true);
-                updateReserve(board.getWhiteReserve(), false);
-
-
+                updateReserves();
                 displayEverything();
             }
         });
@@ -76,7 +73,12 @@ public class ChessBoardActivity extends AppCompatActivity {
 
 
     }
-    void updateReserve(HashMap<ChessPiece, Integer> pieces, final boolean black)
+    void updateReserves()
+    {
+        updateReserve(board.getBlackReserve(), true);
+        updateReserve(board.getWhiteReserve(), false);
+    }
+    void updateReserve(HashMap<String, Integer> pieces, final boolean black)
     {
         Log.d(TAG, "updateReserve");
         int i = 0;
@@ -97,12 +99,12 @@ public class ChessBoardActivity extends AppCompatActivity {
         ConstraintLayout reserve = ((ConstraintLayout) findViewById(layID));
         ConstraintSet constraintSet = new ConstraintSet();
         constraintSet.clone(reserve);
-        for (final Map.Entry<ChessPiece, Integer> entry : pieces.entrySet())
+        for (final Map.Entry<String, Integer> entry : pieces.entrySet())
         {
             if(entry.getValue()>0) {
                 ImageView newPiece = new ImageView(this);
                 Resources res = getResources();
-                String mDrawableName = (black ? "black" : "white") + (entry.getKey().type + "piece");
+                String mDrawableName = (black ? "black" : "white") + (entry.getKey() + "piece");
                 //Log.d(TAG, entry.getKey().type + " = " + entry.getValue()+":"+mDrawableName);
                 int resID = res.getIdentifier(mDrawableName, "drawable", getPackageName());
                 newPiece.setImageResource(resID);
@@ -110,7 +112,7 @@ public class ChessBoardActivity extends AppCompatActivity {
 
                 newPiece.setId(offset + i);
                 newPiece.setOnTouchListener(new View.OnTouchListener() {
-                    String myName = entry.getKey().type;
+                    String myName = entry.getKey();
 
                     @Override
                     public boolean onTouch(View view, MotionEvent motionEvent) {

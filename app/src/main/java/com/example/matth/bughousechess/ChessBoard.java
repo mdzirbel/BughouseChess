@@ -2,6 +2,7 @@ package com.example.matth.bughousechess;
 
 import android.util.Log;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.MutablePair;
 
@@ -11,14 +12,15 @@ import java.util.HashMap;
 
 public class ChessBoard {
     private ChessPiece[][] board = new ChessPiece[8][8]; // Row then Column
-    private HashMap<ChessPiece, Integer> whiteReserve = new HashMap<>();
-    private HashMap<ChessPiece, Integer> blackReserve = new HashMap<>();
+    private HashMap<String, Integer> whiteReserve = new HashMap<>();
+    private HashMap<String, Integer> blackReserve = new HashMap<>();
     private Pair<Integer, Integer> currentlySelectedBoard;
     private Pair<String, String> currentlySelectedReserve; // Team, type
     private String currentPlayer = "white";
-
-    public ChessBoard(String colorNear) {
-        //TODO - handle en passant and check/checkmate
+    final ChessBoardActivity cba;
+    public ChessBoard(String colorNear, ChessBoardActivity cba) {
+        this.cba = cba;
+        //TODO - handle en passant and check/checkmate and pawn to end, can't castle through check
         currentlySelectedBoard = null;
         currentlySelectedReserve = null;
         ChessPiece[] col0 = {new ChessPiece("b", "r"), new ChessPiece("b", "p"), null, null, null, null, new ChessPiece("w", "p"), new ChessPiece("w", "r")};
@@ -30,17 +32,17 @@ public class ChessBoard {
         ChessPiece[] col6 = {new ChessPiece("b", "kn"), new ChessPiece("b", "p"), null, null, null, null, new ChessPiece("w", "p"), new ChessPiece("w", "kn")};
         ChessPiece[] col7 = {new ChessPiece("b", "r"), new ChessPiece("b", "p"), null, null, null, null, new ChessPiece("w", "p"), new ChessPiece("w", "r")};
         board[0] = col0; board[1] = col1; board[2] = col2; board[3] = col3; board[4] = col4; board[5] = col5; board[6] = col6; board[7] = col7;
-        whiteReserve.put(new ChessPiece("w", "p"), 0);
-        whiteReserve.put(new ChessPiece("w", "kn"), 0);
-        whiteReserve.put(new ChessPiece("w", "b"), 0);
-        whiteReserve.put(new ChessPiece("w", "r"), 0);
-        whiteReserve.put(new ChessPiece("w", "q"), 0);
+        whiteReserve.put("pawn", 0);
+        whiteReserve.put("knight", 0);
+        whiteReserve.put("bishop", 0);
+        whiteReserve.put("rook", 0);
+        whiteReserve.put("queen", 0);
 
-        blackReserve.put(new ChessPiece("b", "p"), 0);
-        blackReserve.put(new ChessPiece("b", "kn"), 0);
-        blackReserve.put(new ChessPiece("b", "b"), 0);
-        blackReserve.put(new ChessPiece("b", "r"), 0);
-        blackReserve.put(new ChessPiece("b", "q"), 0);
+        blackReserve.put("pawn", 0);
+        blackReserve.put("knight", 0);
+        blackReserve.put("bishop", 0);
+        blackReserve.put("rook", 0);
+        blackReserve.put("queen", 0);
     }
 
     public void clickOnBoard(int x, int y) {
@@ -72,40 +74,50 @@ public class ChessBoard {
         }
         else { // Has piece selected, attempting a move
             ArrayList<Pair<Integer, Integer>> allowedMoves = getAllowedMoves(currentlySelectedBoard.getLeft(), currentlySelectedBoard.getRight());
+            removeIllegalMoves(allowedMoves, currentlySelectedBoard.getLeft(), currentlySelectedBoard.getRight());
+            if (allowedMoves.size()==0) {
+                if (isInCheck(currentPlayer, board)){
+                    // TODO: checkmate(); // currentPlayer loses
+                }
+                else {
+                    //TODO: stalemate();
+                }
+            }
+
             if (allowedMoves.contains(new MutablePair<>(x, y))) { // If you can move there
-                ChessPiece takenPiece = move(x, y);
+                ChessPiece takenPiece = move(board, currentlySelectedBoard.getLeft(), currentlySelectedBoard.getRight(), x, y);
+                switchCurrentPlayer();
                 if (takenPiece!=null) {
-//                    MainActivity.coms.sendReserve(takenPiece); // Send it to the other phone
+                    MainActivity.coms.sendReserve(takenPiece); // Send it to the other phone
                 }
             }
             deselect();
             Log.i("CLICK", "Deselecting");
         }
     }
-    private ChessPiece move(int x, int y) {
+    private ChessPiece move(ChessPiece[][] moveBoard, int fromX, int fromY, int toX, int toY) {
         ChessPiece takenPiece = null;
-        if (getPieceAt(x, y)!=null) { // If it's not null it's an opponent's piece, so queue up takenPiece
-            takenPiece = getPieceAt(x, y);
+        if (getPieceAt(toX, toY)!=null) { // If it's not null it's an opponent's piece, so queue up takenPiece
+            takenPiece = getPieceAt(toX, toY);
             takenPiece.type = takenPiece.initalType;
         }
-        if (getPieceAt(currentlySelectedBoard).type.equals("king") && Math.abs(x-currentlySelectedBoard.getLeft())>=2) { // If castling
-            if (x>currentlySelectedBoard.getLeft()) { // Castling to the right
-                board[5][y] = board[7][y];
-                board[7][y] = null;
-                board[5][y].hasMoved = true;
+        if (getPieceAt(fromX, fromY).type.equals("king") && Math.abs(toX-fromX)>=2) { // If castling
+            if (toX>fromX) { // Castling to the right
+                moveBoard[5][toY] = moveBoard[7][toY];
+                moveBoard[7][toY] = null;
+                moveBoard[5][toY].hasMoved = true;
                 Log.i("CLICK", "Right Castle");
             }
             else { // Castling to the right
-                board[3][y] = board[0][y];
-                board[0][y] = null;
-                board[3][y].hasMoved = true;
+                moveBoard[3][toY] = moveBoard[0][toY];
+                moveBoard[0][toY] = null;
+                moveBoard[3][toY].hasMoved = true;
                 Log.i("CLICK", "Right Castle");
             }
         }
-        board[x][y] = board[currentlySelectedBoard.getLeft()][currentlySelectedBoard.getRight()]; // Put your piece there
-        board[x][y].hasMoved = true;
-        board[currentlySelectedBoard.getLeft()][currentlySelectedBoard.getRight()] = null; // Make the space you moved out of empty
-        switchCurrentPlayer();
+        moveBoard[toX][toY] = moveBoard[fromX][fromY]; // Put your piece there
+        moveBoard[toX][toY].hasMoved = true;
+        moveBoard[fromX][fromY] = null; // Make the space you moved out of empty
         Log.i("CLICK", "Moving piece");
         return takenPiece;
     }
@@ -117,10 +129,10 @@ public class ChessBoard {
     public ChessPiece[][] getBoard() {
         return board;
     }
-    public HashMap<ChessPiece, Integer> getWhiteReserve() {
+    public HashMap<String, Integer> getWhiteReserve() {
         return whiteReserve;
     }
-    public HashMap<ChessPiece, Integer> getBlackReserve() {
+    public HashMap<String, Integer> getBlackReserve() {
         return blackReserve;
     }
     public void recieveReserve(String team, String type) {
@@ -139,21 +151,34 @@ public class ChessBoard {
         team = HelperFunctions.unAbbrevTeam(team);
         type = HelperFunctions.unAbbrevType(type);
         if (team.equals("white")) {
-            whiteReserve.put(new ChessPiece(team, type), whiteReserve.get(new ChessPiece(team, type))+1);
+            whiteReserve.put(type, whiteReserve.get(type)+1);
         }
         else if (team.equals("black")) {
-            blackReserve.put(new ChessPiece(team, type), blackReserve.get(new ChessPiece(team, type))+1);
+            Log.d("HARDCODED WEIRD TAG", team+": "+type);
+            blackReserve.put(type, blackReserve.get(type)+1);
         }
+        updateReserve();
     }
     private void decrementReserve(String team, String type) {
         team = HelperFunctions.unAbbrevTeam(team);
         type = HelperFunctions.unAbbrevType(type);
         if (team.equals("white")) {
-            whiteReserve.put(new ChessPiece(team, type), whiteReserve.get(new ChessPiece(team, type))-1);
+            whiteReserve.put(type, whiteReserve.get(type)-1);
         }
         else if (team.equals("black")) {
-            blackReserve.put(new ChessPiece(team, type), blackReserve.get(new ChessPiece(team, type))-1);
+            blackReserve.put(type, blackReserve.get(type)-1);
         }
+        updateReserve();
+    }
+    private void updateReserve() {
+        cba.runOnUiThread(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                cba.updateReserves();
+            }
+        });
     }
     private ChessPiece getPieceAt(int x, int y) {
         return board[x][y];
@@ -545,19 +570,54 @@ public class ChessBoard {
             default:
                 assert false : "You wound up with the default case for piece type. That shouldn't happen";
 
-
         }
-
-        removeIllegalMoves(allowedMoves, x, y);
 
         return allowedMoves;
 
     }
+    private ChessPiece[][] getCopyOfBoard(ChessPiece[][] toCopy) { // Make pointer-free new board
+        ChessPiece[][] copy = new ChessPiece[8][8];
+        for (int i=0; i<8; i++) {
+            for (int j=0; j<8; j++) {
+                if (toCopy[i][j]!=null) {
+                    ChessPiece oldPiece = toCopy[i][j];
+                    ChessPiece newPiece = new ChessPiece(oldPiece.team, oldPiece.type);
+                    newPiece.hasMoved = oldPiece.hasMoved;
+                    newPiece.initalType = oldPiece.initalType;
+                    copy[i][j] = newPiece;
+                }
+            }
+        }
+        return copy;
+    }
+    private boolean isInCheck(String currentPlayer, ChessPiece[][] testBoard) {
+        Pair<Integer, Integer> kingLocation = null;
+        for (int i=0; i<8; i++) {
+            for (int j = 0; j < 8; j++) {
+                if (testBoard[i][j]!=null && testBoard[i][j].team.equals(currentPlayer) & testBoard[i][j].type.equals("king")) {
+                    kingLocation = new ImmutablePair<>(i, j);
+                }
+            }
+        }
+        for (int i=0; i<8; i++) {
+            for (int j = 0; j < 8; j++) {
+                if (testBoard[i][j]!=null && !testBoard[i][j].team.equals(currentPlayer)) {
+                    if (getAllowedMoves(i, j).contains(kingLocation)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    private void removeIllegalMoves(ArrayList<Pair<Integer, Integer>> moves, int xPiece, int yPiece) {
 
-    void removeIllegalMoves(ArrayList<Pair<Integer, Integer>> moves, int xPiece, int yPiece) {
-
-        for (Pair<Integer, Integer> move : moves) {
-
+        for (int i=moves.size()-1; i>=0; i--) {
+            ChessPiece[][] newBoard = getCopyOfBoard(board);
+            move(newBoard, xPiece, yPiece, moves.get(i).getLeft(), moves.get(i).getRight());
+            if (isInCheck(currentPlayer, newBoard)) {
+                moves.remove(i);
+            }
         }
     }
 }
