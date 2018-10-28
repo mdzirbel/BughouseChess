@@ -13,6 +13,7 @@ import android.widget.TableRow;
 import android.util.DisplayMetrics;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class ChessBoardActivity extends AppCompatActivity {
 
@@ -47,7 +48,7 @@ public class ChessBoardActivity extends AppCompatActivity {
                 imageViewWidthHeight[1] = imageView.getHeight();
                 imageView.getLocationOnScreen(topLeftCoordsImageView);
 
-                // Instantiate top TableRow object, get coords of top left
+                /*// Instantiate top TableRow object, get coords of top left
                 TableRow topRow = findViewById(R.id.topReserve);
                 topRowWidthHeight[0] = topRow.getWidth();
                 topRowWidthHeight[1] = topRow.getHeight();
@@ -57,13 +58,40 @@ public class ChessBoardActivity extends AppCompatActivity {
                 TableRow bottomRow = findViewById(R.id.bottomReserve);
                 bottomRowWidthHeight[0] = topRow.getWidth();
                 bottomRowWidthHeight[1] = topRow.getHeight();
-                bottomRow.getLocationOnScreen(topLeftCoordsBottomRow);
+                bottomRow.getLocationOnScreen(topLeftCoordsBottomRow);*/
                 displayEverything();
             }
         });
+
+
+
     }
 
+    void updateBlackReserve(HashMap<String, Integer> pieces)
+    {
+        int i = 0;
+        int offset = 1056;
+        ConstraintLayout blackReserve = ((ConstraintLayout) findViewById(R.id.blackReserve));
+        ConstraintSet constraintSet = new ConstraintSet();
+        constraintSet.clone(blackReserve);
 
+        ImageView newPiece = new ImageView(this);
+        newPiece.getHeight();
+        Resources res = getResources();
+        String mDrawableName = "black" + "pawn" + "piece";
+        int resID = res.getIdentifier(mDrawableName , "drawable", getPackageName());
+        newPiece.setImageResource(resID);
+
+
+        newPiece.setId(offset+i);
+
+        blackReserve.addView(newPiece);
+        if(i > 0) {
+            constraintSet.connect(offset+i, ConstraintSet.LEFT, offset+i-1, ConstraintSet.RIGHT, 0);
+        }
+        constraintSet.connect(10, ConstraintSet.TOP, R.id.blackReserve, ConstraintSet.TOP, 0);
+        constraintSet.applyTo(blackReserve);
+    }
 
     private View.OnTouchListener touchListener = new View.OnTouchListener() {
         public boolean onTouch(View v, MotionEvent event) {
@@ -98,7 +126,7 @@ public class ChessBoardActivity extends AppCompatActivity {
         // Clear out everything
         clearBoard();
         // Refill board and reserve
-
+        displayBoard();
 
     }
 
@@ -109,7 +137,7 @@ public class ChessBoardActivity extends AppCompatActivity {
         }
     }
 
-    public void diplayBoard() {
+    public void displayBoard() {
         ChessPiece[][] currentBoard = board.getBoard();
         for (int x = 0; x < 8; x++) {
             for (int y = 0; y < 8; y++) {
