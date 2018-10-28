@@ -8,6 +8,7 @@ public class ChessPiece {
     String pieces[] = {"pawn", "rook", "knight", "bishop", "king", "queen"};
     String type;
     String initalType;
+    boolean hasMoved = false;
     String team;
 
     public ChessPiece(String team, String type) {

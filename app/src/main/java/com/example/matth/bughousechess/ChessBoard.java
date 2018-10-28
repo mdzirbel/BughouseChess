@@ -4,16 +4,17 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.MutablePair;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
 public class ChessBoard {
-    ChessPiece[][] board = new ChessPiece[8][8]; // Row then Column
-    HashMap<ChessPiece, Integer> whiteReserve = new HashMap<>();
-    HashMap<ChessPiece, Integer> blackReserve = new HashMap<>();
-    Pair<Integer, Integer> currentlySelectedBoard = new MutablePair<>(-1, -1);
-    Pair<String, String> currentlySelectedReserve = new MutablePair<>("", "");
-    String currentTurn = "white";
+    private ChessPiece[][] board = new ChessPiece[8][8]; // Row then Column
+    private HashMap<ChessPiece, Integer> whiteReserve = new HashMap<>();
+    private HashMap<ChessPiece, Integer> blackReserve = new HashMap<>();
+    private Pair<Integer, Integer> currentlySelectedBoard;
+    private Pair<String, String> currentlySelectedReserve; // Team, type
+    private String currentPlayer = "white";
 
     public ChessBoard(String colorNear) {
         //TODO - handle en passant and castling
@@ -28,9 +29,6 @@ public class ChessBoard {
         ChessPiece[] col6 = {new ChessPiece("b", "kn"), new ChessPiece("b", "p"), null, null, null, null, new ChessPiece("w", "p"), new ChessPiece("w", "kn")};
         ChessPiece[] col7 = {new ChessPiece("b", "r"), new ChessPiece("b", "p"), null, null, null, null, new ChessPiece("w", "p"), new ChessPiece("w", "r")};
         board[0] = col0; board[1] = col1; board[2] = col2; board[3] = col3; board[4] = col4; board[5] = col5; board[6] = col6; board[7] = col7;
-        if (colorNear.equals("b") || colorNear.equals("black")) {
-            flipBoard();
-        }
         whiteReserve.put(new ChessPiece("w", "p"), 0);
         whiteReserve.put(new ChessPiece("w", "kn"), 0);
         whiteReserve.put(new ChessPiece("w", "b"), 0);
@@ -44,45 +42,48 @@ public class ChessBoard {
         blackReserve.put(new ChessPiece("b", "q"), 0);
     }
 
-    public void flipBoard() {
-        for (ChessPiece[] col : board) {
-            ArrayUtils.reverse(col);
-        }
-    }
     public void clickOnBoard(int x, int y) {
         Pair<Integer, Integer> attemptedMove = new MutablePair<>(x, y);
         if (currentlySelectedBoard==null) {
             if (currentlySelectedReserve==null) { // If you don't have a piece selected
-                if (currentTurn.equals(getPieceFromPair(new MutablePair<>(x, y)))) { // If you select one of your pieces
+                if (tileHasPiece(x,y) && currentPlayer.equals(getPieceAt(new MutablePair<>(x, y)).team)) { // If you select one of your pieces
                     currentlySelectedBoard = new MutablePair<>(x, y); // select piece
                 }
             }
-            else { // Placing a piece from reserve //TODO finish
-                if (hasPiece(x,y)) { // Can't place piece from reserve; deselect //TODO make it so pawns can't be placed on 1st/last
+            else { // Placing a piece from reserve
+                if (currentlySelectedReserve.getRight().equals("pawn") && (x==0 || x==7)) { // Don't let pawns be placed on first or last rank
                     deselect();
                 }
-                else { // Can place piece from reserve, place piece and decrement reserve
-                    decrementReserve(currentlySelectedReserve.getLeft(), currentlySelectedReserve.getRight());
-
+                else {
+                    if (tileHasPiece(x, y)) { // Can't place piece from reserve; deselect
+                        deselect();
+                    } else { // Can place piece from reserve, place piece and decrement reserve
+                        decrementReserve(currentlySelectedReserve.getLeft(), currentlySelectedReserve.getRight());
+                        board[x][y] = new ChessPiece(currentlySelectedReserve.getLeft(), currentlySelectedReserve.getRight());
+                        board[x][y].hasMoved = true;
+                        switchCurrentPlayer();
+                    }
                 }
             }
         }
         else { // Has piece selected, attempting a move
-            Pair<Integer, Integer>[] allowedMoves = getAllowedMoves();
+            ArrayList<Pair<Integer, Integer>> allowedMoves = getAllowedMoves(x, y);
             if (Arrays.asList(allowedMoves).contains(attemptedMove)) { // If you can move there
                 // Check if you are taking an opponent's piece
-                if (getPieceFromPair(attemptedMove)!=null) { // If it's not null it's an opponent's piece
-                    ChessPiece takenPiece = getPieceFromPair(attemptedMove);
+                if (getPieceAt(attemptedMove)!=null) { // If it's not null it's an opponent's piece
+                    ChessPiece takenPiece = getPieceAt(attemptedMove);
                     takenPiece.type = takenPiece.initalType;
                     MainActivity.coms.sendReserve(takenPiece); // Send it to the other phone
                 }
                 board[x][y] = board[currentlySelectedBoard.getLeft()][currentlySelectedBoard.getRight()]; // Put your piece there
+                board[x][y].hasMoved = true;
                 board[currentlySelectedBoard.getLeft()][currentlySelectedBoard.getRight()] = null; // Make the space you moved out of empty
+                switchCurrentPlayer();
             }
             deselect();
         }
     }
-    public void clickOnReserve() {
+    public void clickOnReserve(String team, String type) {
         currentlySelectedBoard = null;
         // TODO write this
     }
@@ -99,6 +100,14 @@ public class ChessBoard {
     public void recieveReserve(String team, String type) {
         team = HelperFunctions.unAbbrevTeam(team);
         incrementReserve(team, type);
+    }
+    public boolean tileHasPiece(int x, int y) {
+        if (isInBoard(x,y)) {
+            return board[x][y] != null;
+        }
+        else {
+            return false;
+        }
     }
     private void incrementReserve(String team, String type) {
         team = HelperFunctions.unAbbrevTeam(team);
@@ -120,26 +129,133 @@ public class ChessBoard {
             blackReserve.put(new ChessPiece(team, type), blackReserve.get(new ChessPiece(team, type))-1);
         }
     }
-    private ChessPiece getPieceFromPair(Pair<Integer, Integer> p){
-        return board[p.getLeft()][p.getRight()];
+    private ChessPiece getPieceAt(int x, int y) {
+        return board[x][y];
     }
-    private boolean hasPiece(int x, int y) {
-        return board[x][y]!=null;
+    private ChessPiece getPieceAt(Pair<Integer, Integer> p){
+        return board[p.getLeft()][p.getRight()];
     }
     private void deselect() {
         currentlySelectedBoard = null;
         currentlySelectedReserve = null;
     }
+    private void switchCurrentPlayer() {
+        if (currentPlayer.equals("white")) {
+            currentPlayer = "black";
+        }
+        else {
+            currentPlayer = "white";
+        }
+    }
 
-    private Pair<Integer, Integer>[] getAllowedMoves() { // TODO make this work
-        String selectedPieceType = board[currentlySelectedBoard.getLeft()][currentlySelectedBoard.getRight()].getPieceType();
+    private boolean isInBoard(int x, int y) {
+        return (x>=0 && x<=7 && y>=0 && y <= 7);
+    }
+    private boolean isEnemy(String yourTeam, int x, int y) {
+        return tileHasPiece(x, y) && !getPieceAt(x, y).team.equals(yourTeam);
+    }
+    private boolean isEmpty(int x, int y) {
+        return isInBoard(x, y) && board[x][y] == null;
+    }
+    private boolean isEmptyOrEnemy(String yourTeam, int x, int y) {
+        return isInBoard(x, y) && (board[x][y] == null || isEnemy(yourTeam, x, y));
+    }
+    private ArrayList<Pair<Integer, Integer>> getAllowedMoves(int x, int y) { // TODO make this work
+        ChessPiece piece = board[x][y];
+        String type = piece.getPieceType();
+        String team = piece.getTeam();
 
-        switch (selectedPieceType) {
+        ArrayList<Pair<Integer, Integer>> allowedMoves = new ArrayList<>();
+
+        switch (type) {
             case ("pawn"):
+                if (team.equals("white")) {
+                    if (isEnemy("white", x+1,y+1)) {
+                        allowedMoves.add(new MutablePair<Integer, Integer>(x+1,y+1));
+                    }
+                    if (isEnemy("white", x-1,y+1)) {
+                        allowedMoves.add(new MutablePair<Integer, Integer>(x-1,y+1));
+                    }
+                    if (!tileHasPiece(x,y+1)) {
+                        allowedMoves.add(new MutablePair<Integer, Integer>(x,y+1));
+                    }
+                    if (!piece.hasMoved && !tileHasPiece(x,y+2)) {
+                        allowedMoves.add(new MutablePair<Integer, Integer>(x,y+2));
+                    }
+                }
+                if (team.equals("black")) {
+                    if (isEnemy("white", x+1,y-1)) {
+                        allowedMoves.add(new MutablePair<Integer, Integer>(x+1,y-1));
+                    }
+                    if (isEnemy("white", x-1,y-1)) {
+                        allowedMoves.add(new MutablePair<Integer, Integer>(x-1,y-1));
+                    }
+                    if (!tileHasPiece(x,y-1)) {
+                        allowedMoves.add(new MutablePair<Integer, Integer>(x,y-1));
+                    }
+                    if (!piece.hasMoved && !tileHasPiece(x,y-2)) {
+                        allowedMoves.add(new MutablePair<Integer, Integer>(x,y-2));
+                    }
+                }
+                break;
+            case ("rook"):
+                // up
+                for (int i=1; i<8; i++) {
+                    int newX = x;
+                    int newY = y-i;
+                    if (isEmpty(newX, newY)) {
+                        allowedMoves.add(new MutablePair<Integer, Integer>(newX,newY));
+                    }
+                    else if (isEnemy(team, x, y)) {
+                        allowedMoves.add(new MutablePair<Integer, Integer>(newX,newY));
+                        break;
+                    }
+                }
+                // down
+                for (int i=1; i<8; i++) {
+                    int newX = x;
+                    int newY = y+i;
+                    if (isEmpty(newX, newY)) {
+                        allowedMoves.add(new MutablePair<Integer, Integer>(newX,newY));
+                    }
+                    else if (isEnemy(team, x, y)) {
+                        allowedMoves.add(new MutablePair<Integer, Integer>(newX,newY));
+                        break;
+                    }
+                }
+                // right
+                for (int i=1; i<8; i++) {
+                    int newX = x+i;
+                    int newY = y;
+                    if (isEmpty(newX, newY)) {
+                        allowedMoves.add(new MutablePair<Integer, Integer>(newX,newY));
+                    }
+                    else if (isEnemy(team, x, y)) {
+                        allowedMoves.add(new MutablePair<Integer, Integer>(newX,newY));
+                        break;
+                    }
+                }
+                for (int i=1; i<8; i++) {
+                    int newX = x-i;
+                    int newY = y;
+                    if (isEmpty(newX, newY)) {
+                        allowedMoves.add(new MutablePair<Integer, Integer>(newX,newY));
+                    }
+                    else if (isEnemy(team, x, y)) {
+                        allowedMoves.add(new MutablePair<Integer, Integer>(newX,newY));
+                        break;
+                    }
+                }
+                break;
+            case ("knight"):
+                //upleft
+                if (isEmptyOrEnemy(team, x, y)) {
+                    allowedMoves.add(new MutablePair<Integer, Integer>(x-1,y));
+                }
 
         }
 
-        return new MutablePair[5];
+        return allowedMoves;
 
     }
 

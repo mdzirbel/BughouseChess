@@ -13,7 +13,7 @@ public class HelperFunctions {
             case "b":
                 return "bishop";
             case "k":
-                return "k";
+                return "king";
             case "q":
                 return "queen";
             default:
@@ -26,7 +26,7 @@ public class HelperFunctions {
             case "b":
                 return "black";
             case "w":
-                return "w";
+                return "white";
             default:
                 return team;
         }
