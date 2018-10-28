@@ -38,8 +38,9 @@ public class Communications
     ConnectedThread conThread;
     private static final String TAG = "MY_APP_DEBUG_TAG";
     static LinkedList<BluetoothDevice> candidateDevices = new LinkedList<BluetoothDevice>();
-    public Communications(Context context, MainActivity.MyAdapter dataAdapter)
+    public Communications(Context context, MainActivity.MyAdapter dataAdapter, FragmentManager fm)
     {
+        this.fm = fm;
         BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBluetoothAdapter == null)
         {
@@ -70,39 +71,104 @@ public class Communications
     }
     public void connectTo(String address)
     {
-        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        BluetoothDevice device = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address);
-        try {
-            BluetoothSocket sock = device.createInsecureRfcommSocketToServiceRecord(UUID.fromString("a56f3f83-5b88-4101-9eb1-8109bb9eebb9"));
-            sock.connect();
-            new ConnectedThread(sock).start();//a56f3f83-5b88-4101-9eb1-8109bb9eebb9
-        } catch (IOException e) {
-            e.printStackTrace();
+        new ConnectThread(address).start();
+    }
+    class ConnectThread extends Thread
+    {
+        String address;
+        public ConnectThread(String add)
+        {
+            this.address = add;
+        }
+        public void run() {
+            BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+            BluetoothDevice device = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address);
+            try {
+                BluetoothSocket sock = device.createInsecureRfcommSocketToServiceRecord(UUID.fromString("a56f3f83-5b88-4101-9eb1-8109bb9eebb9"));
+                sock.connect();
+                new ConnectedThread(sock).start();//a56f3f83-5b88-4101-9eb1-8109bb9eebb9
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
-    public void receiveConnectionFrom(FragmentManager fm, BluetoothSocket sock)
+    public void receiveConnectionFrom(BluetoothSocket sock)
     {
-        new FireMissilesDialogFragment().show(fm, "");
-        /*try {
+        try {
             new ConnectedThread(sock).start();
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
-        }*/
+        }
+    }
+    static void gotoChess()
+    {
+        Log.d(TAG, "GO TO CHESS");
+    }
+    static boolean accepted = false;
+    static void acceptGame()
+    {
+        if(accepted)
+        {
+            gotoChess();//go if accepted is already set
+        }
+        accepted = true;
+        MainActivity.coms.conThread.write("A");
+    }
+    static void declineGame()
+    {
+        accepted = false;
+        MainActivity.coms.conThread.write("D");
     }
     public static class FireMissilesDialogFragment extends DialogFragment {
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             // Use the Builder class for convenient dialog construction
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            builder.setMessage("Do you want to play a game with "+"?")
+            builder.setMessage("Do you want to play a game with "+getArguments().getString("name")+"?")
                     .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
-                            // FIRE ZE MISSILES!
+                            acceptGame();
                         }
                     })
                     .setNegativeButton("No", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
-                            // User cancelled the dialog
+                            declineGame();
+                        }
+                    });
+            // Create the AlertDialog object and return it
+            return builder.create();
+        }
+    }
+    public static class UserNoName extends DialogFragment {
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            // Use the Builder class for convenient dialog construction
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            String mess = "The user your trying to connect to does not have a name set";
+            if(getArguments().getBoolean("me"))
+            {
+                mess = "Someone tried to connect to you for a game but you dont have a name set";
+            }
+            builder.setMessage(mess)
+                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            // FIRE ZE MISSILES!
+                        }
+                    });
+            // Create the AlertDialog object and return it
+            return builder.create();
+        }
+    }
+    public static class TheyDecliened extends DialogFragment {
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            // Use the Builder class for convenient dialog construction
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            String mess = "They decliened your invitation";
+            builder.setMessage(mess)
+                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            // FIRE ZE MISSILES!
                         }
                     });
             // Create the AlertDialog object and return it
@@ -111,9 +177,11 @@ public class Communications
     }
     void sendReserve(ChessPiece piece)
     {
-        conThread.write("R\\|"+piece.team+"+"+piece.type);
+        conThread.write("R|"+piece.team+"+"+piece.type);
     }
-    void parse(String str)
+    FragmentManager fm = null;
+    FireMissilesDialogFragment fmdf;
+    boolean parse(String str)
     {
         String[] messageParts = str.split("\\|");
         if(messageParts[0].equals("R"))
@@ -122,6 +190,37 @@ public class Communications
             Log.d(TAG, "Reserve receive "+parts[0]+":"+parts[1]);
             ChessBoardActivity.board.recieveReserve(parts[0], parts[1]);
         }
+        else if(messageParts[0].equals("H"))
+        {
+            if(messageParts[1].equals("!") || MainActivity.name.equals(""))
+            {
+                return false;
+            }
+            fmdf = new FireMissilesDialogFragment();
+            Bundle bundle = new Bundle();
+            bundle.putString("name", messageParts[1]);
+            fmdf.setArguments(bundle);
+            fmdf.show(fm, "FireMissiles");
+        }
+        else if(messageParts[0].equals("A"))
+        {
+            if(accepted)
+            {
+                gotoChess();//go if already received accepted
+            }
+            accepted = true;
+        }
+        else if(messageParts[0].equals("D"))
+        {
+            if(fmdf.isVisible())
+            {
+                fmdf.dismiss();
+                TheyDecliened TD = new TheyDecliened();
+                TD.show(fm, "FireMissiles");
+            }
+            Log.d(TAG, "Cancel dialogs");
+        }
+        return true;
     }
     private class ConnectedThread extends Thread
     {
@@ -131,6 +230,7 @@ public class Communications
         private byte[] mmBuffer; // mmBuffer store for the stream
 
         public ConnectedThread(BluetoothSocket socket) throws UnsupportedEncodingException {
+            conThread = this;
             mmSocket = socket;
             InputStream tmpIn = null;
             OutputStream tmpOut = null;
@@ -150,7 +250,14 @@ public class Communications
             //mmInStream = (BufferedInputStream) tmpIn;
             mmInStream = new BufferedReader(new InputStreamReader(tmpIn, "UTF-8"));
             mmOutStream = new PrintWriter(tmpOut);
-            write("handshake");
+            if(MainActivity.name.equals(""))
+            {
+                write("H|!");
+            }
+            else
+            {
+                write("H|" + MainActivity.name);
+            }
         }
 
         public void run() {
@@ -159,14 +266,24 @@ public class Communications
                 try {
                     // Read from the InputStream.
                     String str = mmInStream.readLine();
-                    parse(str);
-                    // Send the obtained bytes to the UI activity.
                     Log.d(TAG, "<- "+str);
+                    boolean con = parse(str);
+                    if(!con)
+                    {
+                        UserNoName fmdf = new UserNoName();
+                        Bundle bundle = new Bundle();
+                        bundle.putBoolean("me", MainActivity.name.equals(""));
+                        fmdf.setArguments(bundle);
+                        fmdf.show(fm, "");
+                        break;
+                    }
+                    // Send the obtained bytes to the UI activity.
                 } catch (IOException e) {
                     Log.d(TAG, "Input stream was disconnected", e);
                     break;
                 }
             }
+            cancel();
         }
 
         // Call this from the main activity to send data to the remote device.

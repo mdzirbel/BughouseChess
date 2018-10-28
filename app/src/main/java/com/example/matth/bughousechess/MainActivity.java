@@ -29,12 +29,14 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView.LayoutManager mLayoutManager;
     static Communications coms;
     private static final String TAG = "MY_APP_DEBUG_TAG";
+    EditText nameText;
+    static String name = "";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        EditText nameText = (EditText) findViewById(R.id.editTextName);
+        nameText = (EditText) findViewById(R.id.editTextName);
 
         nameText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -44,15 +46,12 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                if(!(charSequence.equals("Name") || charSequence.equals("")))
-                {
-
-                }
             }
 
             @Override
             public void afterTextChanged(Editable editable) {
-
+                name = editable.toString();
+                setButtons(!(name.equals("Name") || name.equals("")));
             }
         });
 
@@ -71,12 +70,13 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView.setAdapter(mAdapter);
 
 
-        coms = new Communications(getApplicationContext(), mAdapter);
+        coms = new Communications(getApplicationContext(), mAdapter, getSupportFragmentManager());
         new ListenerClass().start();
     }
     void setButtons(boolean enabled)
     {
-        
+        mAdapter.enabled = enabled;
+        mAdapter.notifyDataSetChanged();
     }
     class ListenerClass extends Thread
     {
@@ -85,15 +85,15 @@ public class MainActivity extends AppCompatActivity {
             try {
                 BluetoothServerSocket sock = BluetoothAdapter.getDefaultAdapter().listenUsingInsecureRfcommWithServiceRecord("Max's Bluetooth communication system", UUID.fromString("a56f3f83-5b88-4101-9eb1-8109bb9eebb9"));
                 BluetoothSocket socket = sock.accept();
-                coms.receiveConnectionFrom(getSupportFragmentManager(),socket);
+                coms.receiveConnectionFrom(socket);
                 Log.i(TAG, "accepted");
-                //Toast.makeText(getApplicationContext(), sock.toString(), Toast.LENGTH_SHORT).show();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
     public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
+        boolean enabled = false;
         public void updatePhones()
         {
             notifyDataSetChanged();
@@ -132,6 +132,7 @@ public class MainActivity extends AppCompatActivity {
             // - get element from your dataset at this position
             // - replace the contents of the view with that element
             Button button = ((Button)holder.RL.findViewById(R.id.add_btn));
+            button.setEnabled(enabled);
             button.setText(coms.candidateDevices.get(position).getName());
             button.setOnClickListener(new ClickListener(position));
         }
@@ -145,7 +146,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view)
             {
-                Toast.makeText(getApplicationContext(), "Connecting to "+coms.candidateDevices.get(position).getName(), Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getApplicationContext(), "Connecting to "+coms.candidateDevices.get(position).getName(), Toast.LENGTH_SHORT).show();
+                ((Button) view).setText("Connecting...");
                 coms.connectTo(coms.candidateDevices.get(position).getAddress());
             }
         }
