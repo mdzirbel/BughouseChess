@@ -1,5 +1,7 @@
 package com.example.matth.bughousechess;
 
+import android.content.res.Resources;
+import android.graphics.drawable.Drawable;
 import android.support.constraint.ConstraintLayout;
 import android.support.constraint.ConstraintSet;
 import android.support.v4.view.ViewCompat;
@@ -96,17 +98,18 @@ public class ChessBoardActivity extends AppCompatActivity {
     public void displayBoard() {
         // Fill reserve rows, place piece
         ChessPiece[][] currentBoard = board.getBoard();
+
         for (int x = 0; x < 8; x++) {
             for (int y = 0; y < 8; y++) {
-                displayPiece(x, y);
+                if (board.tileHasPiece(x, y)) {
+                    displayPiece(x, y, currentBoard[x][y]);
+                }
             }
         }
-
-
     }
 
     // need method that places a piece on board display piece with coords
-    public void displayPiece(int xPosBoard, int yPosBoard) {
+    public void displayPiece(int xPosBoard, int yPosBoard, ChessPiece chessPiece) {
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
 
@@ -116,7 +119,12 @@ public class ChessBoardActivity extends AppCompatActivity {
         ImageView newPiece = new ImageView(this);
         newPiece.getHeight();
 
-        newPiece.setImageResource(R.drawable.blackbishoppiece);
+        Resources res = getResources();
+        String mDrawableName = chessPiece.getTeam() + chessPiece.getPieceType() + "piece";
+        int resID = res.getIdentifier(mDrawableName , "drawable", getPackageName());
+        newPiece.setImageResource(resID);
+
+
         newPiece.setId(xPosBoard * 10 + yPosBoard);
 
         ConstraintLayout layout = findViewById(R.id.chessboardview);
