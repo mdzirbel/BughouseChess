@@ -1,6 +1,8 @@
 package com.example.matth.bughousechess;
 
 import android.content.res.Resources;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
 import android.support.constraint.ConstraintLayout;
 import android.support.constraint.ConstraintSet;
 import android.support.v7.app.AppCompatActivity;
@@ -9,11 +11,10 @@ import android.os.Bundle;
 import android.view.View;
 import android.util.Log;
 import android.widget.ImageView;
-import android.widget.TableRow;
 import android.util.DisplayMetrics;
 import android.widget.TextView;
 
-import org.w3c.dom.Text;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,7 +32,8 @@ public class ChessBoardActivity extends AppCompatActivity {
     private int[] topRowWidthHeight = new int[2];
     private int[] bottomRowWidthHeight = new int[2];
     ArrayList<ImageView> currentBoardImages = new ArrayList<>();
-    ConstraintLayout parentContrainView;
+    ConstraintLayout parentConstrainView;
+    ImageView highighting;
 
     // class member to save board variable
     public static ChessBoard board;
@@ -41,9 +43,9 @@ public class ChessBoardActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         board = new ChessBoard("w", this);
         setContentView(R.layout.activity_chess_board);
-        parentContrainView = findViewById(R.id.chessboardview);
+        parentConstrainView = findViewById(R.id.chessboardview);
 
-        parentContrainView.post(new Runnable() {
+        parentConstrainView.post(new Runnable() {
             @Override
             public void run() {
                 // Instantiate ImageView object, set touch/click listener, get coords of top left
@@ -181,14 +183,60 @@ public class ChessBoardActivity extends AppCompatActivity {
     public void displayEverything() {
         // Clear out everything
         clearBoard();
+        clearHighlight();
         // Refill board and reserve
         displayBoard();
+        displayHighlight();
 
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    public void displayHighlight() {
+        Pair<Integer, Integer> xyPosBoard = board.getSelected();
+        if (xyPosBoard == null) {
+            clearHighlight();
+        } else {
+            DisplayMetrics displayMetrics = new DisplayMetrics();
+            getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+            int hei = findViewById(R.id.boardImage).getHeight();
+            int wid = findViewById(R.id.boardImage).getWidth();
+            int xPosToRender = (wid / 8 * xyPosBoard.getLeft());
+            int yPosToRender = (hei / 8 * xyPosBoard.getRight());
+            ImageView newPiece = new ImageView(this);
+            newPiece.getHeight();
+            newPiece.setElevation(2);
+
+            Resources res = getResources();
+            int resID = res.getIdentifier("highlighting", "drawable", getPackageName());
+            newPiece.setImageResource(resID);
+            newPiece.setId(100*(100+xyPosBoard.getLeft() * 10 + xyPosBoard.getRight()));
+
+
+            parentConstrainView.addView(newPiece);
+
+            ConstraintSet constraintSet = new ConstraintSet();
+            constraintSet.clone(parentConstrainView);
+            constraintSet.connect(newPiece.getId(), ConstraintSet.LEFT, R.id.boardImage, ConstraintSet.LEFT, xPosToRender);
+            constraintSet.connect(newPiece.getId(), ConstraintSet.TOP, R.id.boardImage, ConstraintSet.TOP, yPosToRender);
+            constraintSet.applyTo(parentConstrainView);
+
+            ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) newPiece.getLayoutParams();
+            params.height = (int) (findViewById(R.id.boardImage).getHeight() / 8.0);
+            params.width = (int) (findViewById(R.id.boardImage).getWidth() / 8.0);
+
+            currentBoardImages.add(newPiece);
+        }
+
+    }
+
+    public void clearHighlight() {
+        currentBoardImages.remove(highighting);
+        highighting = null;
     }
 
     public void clearBoard() {
         for (int i=currentBoardImages.size()-1; i>=0; i--) {
-            parentContrainView.removeView(currentBoardImages.get(i));
+            parentConstrainView.removeView(currentBoardImages.get(i));
             currentBoardImages.remove(i);
         }
     }
@@ -205,6 +253,7 @@ public class ChessBoardActivity extends AppCompatActivity {
     }
 
     // need method that places a piece on board display piece with coords
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public void displayPiece(int xPosBoard, int yPosBoard, ChessPiece chessPiece) {
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
@@ -214,22 +263,21 @@ public class ChessBoardActivity extends AppCompatActivity {
         int yPosToRender = (hei / 8 * yPosBoard);
         ImageView newPiece = new ImageView(this);
         newPiece.getHeight();
-
+        newPiece.setElevation(5);
         Resources res = getResources();
         String mDrawableName = chessPiece.getTeam() + chessPiece.getPieceType() + "piece";
         int resID = res.getIdentifier(mDrawableName , "drawable", getPackageName());
         newPiece.setImageResource(resID);
-
-
+        newPiece.bringToFront();
         newPiece.setId(xPosBoard * 10 + yPosBoard);
 
-        parentContrainView.addView(newPiece);
+        parentConstrainView.addView(newPiece);
 
         ConstraintSet constraintSet = new ConstraintSet();
-        constraintSet.clone(parentContrainView);
+        constraintSet.clone(parentConstrainView);
         constraintSet.connect(newPiece.getId(), ConstraintSet.LEFT, R.id.boardImage, ConstraintSet.LEFT, xPosToRender);
         constraintSet.connect(newPiece.getId(), ConstraintSet.TOP, R.id.boardImage, ConstraintSet.TOP, yPosToRender);
-        constraintSet.applyTo(parentContrainView);
+        constraintSet.applyTo(parentConstrainView);
 
         ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) newPiece.getLayoutParams();
         params.height = (int) (findViewById(R.id.boardImage).getHeight() / 8.0);
