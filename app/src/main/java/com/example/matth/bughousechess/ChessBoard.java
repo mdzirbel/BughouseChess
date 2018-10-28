@@ -20,6 +20,7 @@ public class ChessBoard {
     final ChessBoardActivity cba;
     public ChessBoard(String colorNear, ChessBoardActivity cba) {
         this.cba = cba;
+        MainActivity.coms.fm = cba.getSupportFragmentManager();
         //TODO - handle en passant and check/checkmate and pawn to end, can't castle through check
         currentlySelectedBoard = null;
         currentlySelectedReserve = null;
@@ -444,10 +445,10 @@ public class ChessBoard {
                     ChessPiece left = getPieceAt(0, y);
                     ChessPiece right = getPieceAt(7, y);
 
-                    if (!left.hasMoved && isEmpty(1, y) && isEmpty(2,y) && isEmpty(3,y)) {
+                    if (left!=null && !left.hasMoved && isEmpty(1, y) && isEmpty(2,y) && isEmpty(3,y)) {
                         allowedMoves.add(new MutablePair<>(2,y));
                     }
-                    if (!right.hasMoved && isEmpty(5, y) && isEmpty(6,y)) {
+                    if (right!=null && !right.hasMoved && isEmpty(5, y) && isEmpty(6,y)) {
                         allowedMoves.add(new MutablePair<>(6,y));
                     }
                 }
