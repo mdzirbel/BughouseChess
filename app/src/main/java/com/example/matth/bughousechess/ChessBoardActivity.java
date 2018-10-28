@@ -95,6 +95,7 @@ public class ChessBoardActivity extends AppCompatActivity {
             layID = R.id.whiteReserve;
         }
         ConstraintLayout reserve = ((ConstraintLayout) findViewById(layID));
+        reserve.removeAllViewsInLayout();
         ConstraintSet constraintSet = new ConstraintSet();
         constraintSet.clone(reserve);
         for (final Map.Entry<String, Integer> entry : pieces.entrySet())
