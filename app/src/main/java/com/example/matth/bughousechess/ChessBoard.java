@@ -46,7 +46,7 @@ public class ChessBoard {
         Pair<Integer, Integer> attemptedMove = new MutablePair<>(x, y);
         if (currentlySelectedBoard==null) {
             if (currentlySelectedReserve==null) { // If you don't have a piece selected
-                if (currentPlayer.equals(getPieceAt(new MutablePair<>(x, y)).team)) { // If you select one of your pieces
+                if (tileHasPiece(x,y) && currentPlayer.equals(getPieceAt(new MutablePair<>(x, y)).team)) { // If you select one of your pieces
                     currentlySelectedBoard = new MutablePair<>(x, y); // select piece
                 }
             }
@@ -60,6 +60,7 @@ public class ChessBoard {
                     } else { // Can place piece from reserve, place piece and decrement reserve
                         decrementReserve(currentlySelectedReserve.getLeft(), currentlySelectedReserve.getRight());
                         board[x][y] = new ChessPiece(currentlySelectedReserve.getLeft(), currentlySelectedReserve.getRight());
+                        board[x][y].hasMoved = true;
                         switchCurrentPlayer();
                     }
                 }
@@ -75,6 +76,7 @@ public class ChessBoard {
                     MainActivity.coms.sendReserve(takenPiece); // Send it to the other phone
                 }
                 board[x][y] = board[currentlySelectedBoard.getLeft()][currentlySelectedBoard.getRight()]; // Put your piece there
+                board[x][y].hasMoved = true;
                 board[currentlySelectedBoard.getLeft()][currentlySelectedBoard.getRight()] = null; // Make the space you moved out of empty
                 switchCurrentPlayer();
             }
@@ -100,7 +102,12 @@ public class ChessBoard {
         incrementReserve(team, type);
     }
     public boolean tileHasPiece(int x, int y) {
-        return board[x][y]!=null;
+        if (isInBoard(x,y)) {
+            return board[x][y] != null;
+        }
+        else {
+            return false;
+        }
     }
     private void incrementReserve(String team, String type) {
         team = HelperFunctions.unAbbrevTeam(team);
@@ -141,16 +148,109 @@ public class ChessBoard {
         }
     }
 
+    private boolean isInBoard(int x, int y) {
+        return (x>=0 && x<=7 && y>=0 && y <= 7);
+    }
+    private boolean isEnemy(String yourTeam, int x, int y) {
+        return tileHasPiece(x, y) && !getPieceAt(x, y).team.equals(yourTeam);
+    }
+    private boolean isEmpty(int x, int y) {
+        return isInBoard(x, y) && board[x][y] == null;
+    }
+    private boolean isEmptyOrEnemy(String yourTeam, int x, int y) {
+        return isInBoard(x, y) && (board[x][y] == null || isEnemy(yourTeam, x, y));
+    }
     private ArrayList<Pair<Integer, Integer>> getAllowedMoves(int x, int y) { // TODO make this work
-        String type = board[x][y].getPieceType();
-        String team = board[x][y].getTeam();
+        ChessPiece piece = board[x][y];
+        String type = piece.getPieceType();
+        String team = piece.getTeam();
 
         ArrayList<Pair<Integer, Integer>> allowedMoves = new ArrayList<>();
 
         switch (type) {
             case ("pawn"):
                 if (team.equals("white")) {
-
+                    if (isEnemy("white", x+1,y+1)) {
+                        allowedMoves.add(new MutablePair<Integer, Integer>(x+1,y+1));
+                    }
+                    if (isEnemy("white", x-1,y+1)) {
+                        allowedMoves.add(new MutablePair<Integer, Integer>(x-1,y+1));
+                    }
+                    if (!tileHasPiece(x,y+1)) {
+                        allowedMoves.add(new MutablePair<Integer, Integer>(x,y+1));
+                    }
+                    if (!piece.hasMoved && !tileHasPiece(x,y+2)) {
+                        allowedMoves.add(new MutablePair<Integer, Integer>(x,y+2));
+                    }
+                }
+                if (team.equals("black")) {
+                    if (isEnemy("white", x+1,y-1)) {
+                        allowedMoves.add(new MutablePair<Integer, Integer>(x+1,y-1));
+                    }
+                    if (isEnemy("white", x-1,y-1)) {
+                        allowedMoves.add(new MutablePair<Integer, Integer>(x-1,y-1));
+                    }
+                    if (!tileHasPiece(x,y-1)) {
+                        allowedMoves.add(new MutablePair<Integer, Integer>(x,y-1));
+                    }
+                    if (!piece.hasMoved && !tileHasPiece(x,y-2)) {
+                        allowedMoves.add(new MutablePair<Integer, Integer>(x,y-2));
+                    }
+                }
+                break;
+            case ("rook"):
+                // up
+                for (int i=1; i<8; i++) {
+                    int newX = x;
+                    int newY = y-i;
+                    if (isEmpty(newX, newY)) {
+                        allowedMoves.add(new MutablePair<Integer, Integer>(newX,newY));
+                    }
+                    else if (isEnemy(team, x, y)) {
+                        allowedMoves.add(new MutablePair<Integer, Integer>(newX,newY));
+                        break;
+                    }
+                }
+                // down
+                for (int i=1; i<8; i++) {
+                    int newX = x;
+                    int newY = y+i;
+                    if (isEmpty(newX, newY)) {
+                        allowedMoves.add(new MutablePair<Integer, Integer>(newX,newY));
+                    }
+                    else if (isEnemy(team, x, y)) {
+                        allowedMoves.add(new MutablePair<Integer, Integer>(newX,newY));
+                        break;
+                    }
+                }
+                // right
+                for (int i=1; i<8; i++) {
+                    int newX = x+i;
+                    int newY = y;
+                    if (isEmpty(newX, newY)) {
+                        allowedMoves.add(new MutablePair<Integer, Integer>(newX,newY));
+                    }
+                    else if (isEnemy(team, x, y)) {
+                        allowedMoves.add(new MutablePair<Integer, Integer>(newX,newY));
+                        break;
+                    }
+                }
+                for (int i=1; i<8; i++) {
+                    int newX = x-i;
+                    int newY = y;
+                    if (isEmpty(newX, newY)) {
+                        allowedMoves.add(new MutablePair<Integer, Integer>(newX,newY));
+                    }
+                    else if (isEnemy(team, x, y)) {
+                        allowedMoves.add(new MutablePair<Integer, Integer>(newX,newY));
+                        break;
+                    }
+                }
+                break;
+            case ("knight"):
+                //upleft
+                if (isEmptyOrEnemy(team, x, y)) {
+                    allowedMoves.add(new MutablePair<Integer, Integer>(x-1,y));
                 }
 
         }
