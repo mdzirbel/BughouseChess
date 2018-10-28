@@ -76,14 +76,6 @@ public class ChessBoard {
         else { // Has piece selected, attempting a move
             ArrayList<Pair<Integer, Integer>> allowedMoves = getAllowedMoves(currentlySelectedBoard.getLeft(), currentlySelectedBoard.getRight());
             removeIllegalMoves(allowedMoves, currentlySelectedBoard.getLeft(), currentlySelectedBoard.getRight());
-            if (allowedMoves.size()==0) {
-                if (isInCheck(currentPlayer, board)){
-                    // TODO: checkmate(); // currentPlayer loses
-                }
-                else if (placeablePieces(currentPlayer)==0){
-                    //TODO: stalemate();
-                }
-            }
 
             if (allowedMoves.contains(new MutablePair<>(x, y))) { // If you can move there
                 ChessPiece takenPiece = move(board, currentlySelectedBoard.getLeft(), currentlySelectedBoard.getRight(), x, y);
@@ -95,6 +87,7 @@ public class ChessBoard {
             deselect();
             Log.i("CLICK", "Deselecting");
         }
+        checkForGameEnd();
     }
     private ChessPiece move(ChessPiece[][] moveBoard, int fromX, int fromY, int toX, int toY) {
         ChessPiece takenPiece = null;
@@ -631,6 +624,29 @@ public class ChessBoard {
             move(newBoard, xPiece, yPiece, moves.get(i).getLeft(), moves.get(i).getRight());
             if (isInCheck(currentPlayer, newBoard)) {
                 moves.remove(i);
+            }
+        }
+    }
+
+    public void checkForGameEnd() {
+        boolean hasMoves = false;
+        for (int i=0; i<8; i++) {
+            for (int j = 0; j < 8; j++) {
+                if (!hasMoves && board[i][j] != null & board[i][j].type.equals(currentPlayer)) {
+                    ArrayList<Pair<Integer, Integer>> moves = getAllowedMoves(i, j);
+                    removeIllegalMoves(moves, i, j);
+                    if (moves.size()>0) {
+                        hasMoves = true;
+                    }
+                }
+            }
+        }
+        if (!hasMoves) {
+            if (isInCheck(currentPlayer, board)) {
+                 MainActivity.coms.checkMate(name.equals("black")?"white":"black");
+            }
+            else {
+                MainActivity.coms.staleMate(name.equals("black")?"white":"black");
             }
         }
     }
