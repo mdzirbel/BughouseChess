@@ -11,13 +11,18 @@ import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TableRow;
 import android.util.DisplayMetrics;
+import android.widget.TextView;
+
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 public class ChessBoardActivity extends AppCompatActivity {
 
     // class member variable to save the X,Y coordinates
+    private static final String TAG = "MY_APP_DEBUG_TAG";
     private float[] lastTouchDownXY = new float[2];
     private int[] topLeftCoordsImageView = new int[2];
     private int[] topLeftCoordsTopRow = new int[2];
@@ -60,6 +65,10 @@ public class ChessBoardActivity extends AppCompatActivity {
                 bottomRowWidthHeight[0] = topRow.getWidth();
                 bottomRowWidthHeight[1] = topRow.getHeight();
                 bottomRow.getLocationOnScreen(topLeftCoordsBottomRow);*/
+                updateReserve(board.getBlackReserve(), true);
+                updateReserve(board.getWhiteReserve(), false);
+
+
                 displayEverything();
             }
         });
@@ -67,31 +76,76 @@ public class ChessBoardActivity extends AppCompatActivity {
 
 
     }
-
-    void updateBlackReserve(HashMap<String, Integer> pieces)
+    void updateReserve(HashMap<ChessPiece, Integer> pieces, final boolean black)
     {
+        Log.d(TAG, "updateReserve");
         int i = 0;
         int offset = 1056;
-        ConstraintLayout blackReserve = ((ConstraintLayout) findViewById(R.id.blackReserve));
-        ConstraintSet constraintSet = new ConstraintSet();
-        constraintSet.clone(blackReserve);
-
-        ImageView newPiece = new ImageView(this);
-        newPiece.getHeight();
-        Resources res = getResources();
-        String mDrawableName = "black" + "pawn" + "piece";
-        int resID = res.getIdentifier(mDrawableName , "drawable", getPackageName());
-        newPiece.setImageResource(resID);
-
-
-        newPiece.setId(offset+i);
-
-        blackReserve.addView(newPiece);
-        if(i > 0) {
-            constraintSet.connect(offset+i, ConstraintSet.LEFT, offset+i-1, ConstraintSet.RIGHT, 0);
+        if(black)
+        {
+            offset += 10;
         }
-        constraintSet.connect(10, ConstraintSet.TOP, R.id.blackReserve, ConstraintSet.TOP, 0);
-        constraintSet.applyTo(blackReserve);
+        int layID;
+        if(black)
+        {
+            layID = R.id.blackReserve;
+        }
+        else
+        {
+            layID = R.id.whiteReserve;
+        }
+        ConstraintLayout reserve = ((ConstraintLayout) findViewById(layID));
+        ConstraintSet constraintSet = new ConstraintSet();
+        constraintSet.clone(reserve);
+        for (final Map.Entry<ChessPiece, Integer> entry : pieces.entrySet())
+        {
+            if(entry.getValue()>0) {
+                ImageView newPiece = new ImageView(this);
+                Resources res = getResources();
+                String mDrawableName = (black ? "black" : "white") + (entry.getKey().type + "piece");
+                //Log.d(TAG, entry.getKey().type + " = " + entry.getValue()+":"+mDrawableName);
+                int resID = res.getIdentifier(mDrawableName, "drawable", getPackageName());
+                newPiece.setImageResource(resID);
+
+
+                newPiece.setId(offset + i);
+                newPiece.setOnTouchListener(new View.OnTouchListener() {
+                    String myName = entry.getKey().type;
+
+                    @Override
+                    public boolean onTouch(View view, MotionEvent motionEvent) {
+                        if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+                            Log.d(TAG, (black ? "black" : "white") + " " + myName + " touched");
+                            board.clickOnReserve((black ? "black" : "white"), myName);
+                        }
+                        return true;
+                    }
+                });
+                reserve.addView(newPiece);
+                if (i > 0) {
+                    constraintSet.connect(offset + i, ConstraintSet.LEFT, offset + i - 1, ConstraintSet.RIGHT, 0);
+                }
+                constraintSet.connect(offset + i, ConstraintSet.TOP, layID, ConstraintSet.TOP, 0);
+                constraintSet.connect(offset + i, ConstraintSet.BOTTOM, layID, ConstraintSet.BOTTOM, 0);
+                constraintSet.constrainHeight(offset + i, reserve.getHeight() / 3 * 2);
+                constraintSet.constrainWidth(offset + i, reserve.getWidth() / 5);
+                if (entry.getValue() > 1) {
+                    TextView label = new TextView(this);
+                    label.setText(entry.getValue() + "");
+                    label.setId(offset + i + 5);
+                    reserve.addView(label);
+                    constraintSet.connect(offset + i + 5, ConstraintSet.BOTTOM, offset + i, ConstraintSet.BOTTOM, 0);
+                    constraintSet.connect(offset + i + 5, ConstraintSet.RIGHT, offset + i, ConstraintSet.RIGHT, 0);
+                    constraintSet.constrainHeight(offset + i + 5, (reserve.getHeight() / 3 * 2) / 3);
+                    constraintSet.constrainWidth(offset + i + 5, (reserve.getWidth() / 5) / 5);
+                }
+            /*params.height = (int) (50);
+            params.width = (int) (50);*/
+
+                i++;
+            }
+        }
+        constraintSet.applyTo(reserve);
     }
 
     private View.OnTouchListener touchListener = new View.OnTouchListener() {
@@ -151,10 +205,10 @@ public class ChessBoardActivity extends AppCompatActivity {
     public void displayPiece(int xPosBoard, int yPosBoard, ChessPiece chessPiece) {
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-
-        int xPosToRender = (imageViewWidthHeight[0] / 8 * xPosBoard);
-        int yPosToRender = (imageViewWidthHeight[1] / 8 * yPosBoard);
-
+        int hei = findViewById(R.id.boardImage).getHeight();
+        int wid = findViewById(R.id.boardImage).getWidth();
+        int xPosToRender = (wid / 8 * xPosBoard);
+        int yPosToRender = (hei / 8 * yPosBoard);
         ImageView newPiece = new ImageView(this);
         newPiece.getHeight();
 
