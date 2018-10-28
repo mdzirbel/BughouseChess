@@ -94,25 +94,22 @@ public class ChessBoardActivity extends AppCompatActivity {
     public void displayPiece(int xPosBoard, int yPosBoard) {
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        int width = displayMetrics.widthPixels;
-        int height = displayMetrics.heightPixels;
-        int xPosToRender = (int) (width * .02 + imageViewWidthHeight[0] / 8 * xPosBoard);
-        int yPosToRender = (int) (height * .02 + imageViewWidthHeight[1] / 8 * yPosBoard);
+        int xPosToRender = (imageViewWidthHeight[0] / 8 * xPosBoard);
+        int yPosToRender = (imageViewWidthHeight[1] / 8 * yPosBoard);
+
         ImageView newPiece = new ImageView(this);
         newPiece.setId(3 + 0);
         newPiece.setImageResource(R.drawable.blackbishoppiece);
-        ConstraintLayout chessBoardView = findViewById(R.id.chessboardview);
-        ImageView chessBoardImage = findViewById(R.id.boardImage);
-        chessBoardView.addView(newPiece);
-        ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) chessBoardImage.getLayoutParams();
-        params.topMargin = 300;
-////        ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) newPiece.getLayoutParams();
-////        // params.setMargins(100, 300, 0, 0);
-////        params.leftMargin = 100;
-////        params.topMargin = 300;
-//        ConstraintSet constraintSet = new ConstraintSet();
-//        constraintSet.connect(newPiece.getId(), ConstraintSet.LEFT, chessBoardView.getId(), ConstraintSet.LEFT, 0);
-//        constraintSet.applyTo(chessBoardView);
-//         newPiece.bringToFront();
+        newPiece.setElevation(5);
+        newPiece.setId(3+1);
+
+        ConstraintLayout layout = findViewById(R.id.chessboardview);
+        layout.addView(newPiece);
+
+        ConstraintSet constraintSet = new ConstraintSet();
+        constraintSet.clone(layout);
+        constraintSet.connect(newPiece.getId(), ConstraintSet.LEFT, R.id.boardImage, ConstraintSet.LEFT, xPosToRender);
+        constraintSet.connect(newPiece.getId(), ConstraintSet.TOP, R.id.boardImage, ConstraintSet.TOP, yPosToRender);
+        constraintSet.applyTo(layout);
     }
 }

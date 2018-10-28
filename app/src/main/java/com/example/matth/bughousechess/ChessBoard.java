@@ -57,8 +57,14 @@ public class ChessBoard {
                     currentlySelectedBoard = new MutablePair<>(x, y); // select piece
                 }
             }
-            else { // Placing a piece from reserve
-                decrementReserve(currentlySelectedReserve.getLeft(), currentlySelectedReserve.getRight());
+            else { // Placing a piece from reserve //TODO finish
+                if (hasPiece(x,y)) { // Can't place piece from reserve; deselect //TODO make it so pawns can't be placed on 1st/last
+                    deselect();
+                }
+                else { // Can place piece from reserve, place piece and decrement reserve
+                    decrementReserve(currentlySelectedReserve.getLeft(), currentlySelectedReserve.getRight());
+
+                }
             }
         }
         else { // Has piece selected, attempting a move
@@ -66,14 +72,14 @@ public class ChessBoard {
             if (Arrays.asList(allowedMoves).contains(attemptedMove)) { // If you can move there
                 // Check if you are taking an opponent's piece
                 if (getPieceFromPair(attemptedMove)!=null) { // If it's not null it's an opponent's piece
-                    MainActivity.coms.sendReserve(getPieceFromPair(attemptedMove)); // TODO add this in once Max makes it
+                    ChessPiece takenPiece = getPieceFromPair(attemptedMove);
+                    takenPiece.type = takenPiece.initalType;
+                    MainActivity.coms.sendReserve(takenPiece); // Send it to the other phone
                 }
                 board[x][y] = board[currentlySelectedBoard.getLeft()][currentlySelectedBoard.getRight()]; // Put your piece there
                 board[currentlySelectedBoard.getLeft()][currentlySelectedBoard.getRight()] = null; // Make the space you moved out of empty
             }
-            else {
-                currentlySelectedBoard = null;
-            }
+            deselect();
         }
     }
     public void clickOnReserve() {
@@ -117,12 +123,15 @@ public class ChessBoard {
     private ChessPiece getPieceFromPair(Pair<Integer, Integer> p){
         return board[p.getLeft()][p.getRight()];
     }
+    private boolean hasPiece(int x, int y) {
+        return board[x][y]!=null;
+    }
     private void deselect() {
         currentlySelectedBoard = null;
         currentlySelectedReserve = null;
     }
 
-    private Pair<Integer, Integer>[] getAllowedMoves() {
+    private Pair<Integer, Integer>[] getAllowedMoves() { // TODO make this work
         String selectedPieceType = board[currentlySelectedBoard.getLeft()][currentlySelectedBoard.getRight()].getPieceType();
 
         switch (selectedPieceType) {

@@ -36,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Intent intent = new Intent(MainActivity.this, ChessBoardActivity.class);
         startActivity(intent);
+
         EditText nameText = (EditText) findViewById(R.id.editTextName);
 
         nameText.addTextChangedListener(new TextWatcher() {
