@@ -71,6 +71,7 @@ public class ChessBoard {
                         Log.i("CLICK", "Placed piece on board");
                     }
                 }
+                deselect();
             }
         }
         else { // Has piece selected, attempting a move
@@ -82,7 +83,7 @@ public class ChessBoard {
                     MainActivity.coms.checkMate(name.equals("black")?"white":"black");
                     // TODO: checkmate(); // currentPlayer loses
                 }
-                else {
+                else if (placeablePieces(currentPlayer)==0){
                     //TODO: stalemate();
                     MainActivity.coms.staleMate(name.equals("black")?"white":"black");
                 }
@@ -126,8 +127,10 @@ public class ChessBoard {
         return takenPiece;
     }
     public void clickOnReserve(String team, String type) {
-        currentlySelectedBoard = null;
-        currentlySelectedReserve = new MutablePair<>(team, type);
+        deselect();
+        if (currentPlayer.equals(team)) {
+            currentlySelectedReserve = new MutablePair<>(team, type);
+        }
     }
 
     public ChessPiece[][] getBoard() {
@@ -143,12 +146,23 @@ public class ChessBoard {
         team = HelperFunctions.unAbbrevTeam(team);
         incrementReserve(team, type);
     }
+    public Pair<Integer, Integer> getSelected() {
+        return currentlySelectedBoard;
+    }
     public boolean tileHasPiece(int x, int y) {
         if (isInBoard(x,y)) {
             return board[x][y] != null;
         }
         else {
             return false;
+        }
+    }
+    private int placeablePieces(String player) {
+        if (player.equals("white")) {
+            return whiteReserve.get("pawn")+whiteReserve.get("rook")+whiteReserve.get("knight")+whiteReserve.get("bishop")+whiteReserve.get("queen");
+        }
+        else {
+            return blackReserve.get("pawn")+whiteReserve.get("rook")+whiteReserve.get("knight")+whiteReserve.get("bishop")+whiteReserve.get("queen");
         }
     }
     private void incrementReserve(String team, String type) {
@@ -215,7 +229,7 @@ public class ChessBoard {
     private boolean isEmptyOrEnemy(String yourTeam, int x, int y) {
         return isInBoard(x, y) && (board[x][y] == null || isEnemy(yourTeam, x, y));
     }
-    private ArrayList<Pair<Integer, Integer>> getAllowedMoves(int x, int y) { // TODO make this work
+    private ArrayList<Pair<Integer, Integer>> getAllowedMoves(int x, int y) {
         ChessPiece piece = board[x][y];
         String type = piece.getPieceType();
         String team = piece.getTeam();
