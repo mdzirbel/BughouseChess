@@ -9,8 +9,11 @@ import android.os.Bundle;
 import android.view.View;
 import android.util.Log;
 import android.widget.ImageView;
+import android.widget.TableRow;
 import android.util.DisplayMetrics;
 import android.widget.TextView;
+
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,20 +31,19 @@ public class ChessBoardActivity extends AppCompatActivity {
     private int[] topRowWidthHeight = new int[2];
     private int[] bottomRowWidthHeight = new int[2];
     ArrayList<ImageView> currentBoardImages = new ArrayList<>();
-    ConstraintLayout parentConstrainView;
-    ImageView pieceHightlight;
+    ConstraintLayout parentContrainView;
 
     // class member to save board variable
-    public static ChessBoard board = new ChessBoard("w");
+    public static ChessBoard board;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        board = new ChessBoard("w", this);
         setContentView(R.layout.activity_chess_board);
+        parentContrainView = findViewById(R.id.chessboardview);
 
-        parentConstrainView = findViewById(R.id.chessboardview);
-
-        parentConstrainView.post(new Runnable() {
+        parentContrainView.post(new Runnable() {
             @Override
             public void run() {
                 // Instantiate ImageView object, set touch/click listener, get coords of top left
@@ -63,9 +65,7 @@ public class ChessBoardActivity extends AppCompatActivity {
                 bottomRowWidthHeight[0] = topRow.getWidth();
                 bottomRowWidthHeight[1] = topRow.getHeight();
                 bottomRow.getLocationOnScreen(topLeftCoordsBottomRow);*/
-                updateReserve(board.getBlackReserve(), true);
-                updateReserve(board.getWhiteReserve(), false);
-
+                updateReserves();
                 displayEverything();
             }
         });
@@ -73,7 +73,12 @@ public class ChessBoardActivity extends AppCompatActivity {
 
 
     }
-    void updateReserve(HashMap<ChessPiece, Integer> pieces, final boolean black)
+    void updateReserves()
+    {
+        updateReserve(board.getBlackReserve(), true);
+        updateReserve(board.getWhiteReserve(), false);
+    }
+    void updateReserve(HashMap<String, Integer> pieces, final boolean black)
     {
         Log.d(TAG, "updateReserve");
         int i = 0;
@@ -94,12 +99,12 @@ public class ChessBoardActivity extends AppCompatActivity {
         ConstraintLayout reserve = ((ConstraintLayout) findViewById(layID));
         ConstraintSet constraintSet = new ConstraintSet();
         constraintSet.clone(reserve);
-        for (final Map.Entry<ChessPiece, Integer> entry : pieces.entrySet())
+        for (final Map.Entry<String, Integer> entry : pieces.entrySet())
         {
             if(entry.getValue()>0) {
                 ImageView newPiece = new ImageView(this);
                 Resources res = getResources();
-                String mDrawableName = (black ? "black" : "white") + (entry.getKey().type + "piece");
+                String mDrawableName = (black ? "black" : "white") + (entry.getKey() + "piece");
                 //Log.d(TAG, entry.getKey().type + " = " + entry.getValue()+":"+mDrawableName);
                 int resID = res.getIdentifier(mDrawableName, "drawable", getPackageName());
                 newPiece.setImageResource(resID);
@@ -107,7 +112,7 @@ public class ChessBoardActivity extends AppCompatActivity {
 
                 newPiece.setId(offset + i);
                 newPiece.setOnTouchListener(new View.OnTouchListener() {
-                    String myName = entry.getKey().type;
+                    String myName = entry.getKey();
 
                     @Override
                     public boolean onTouch(View view, MotionEvent motionEvent) {
@@ -181,8 +186,8 @@ public class ChessBoardActivity extends AppCompatActivity {
     }
 
     public void clearBoard() {
-        for (int i = currentBoardImages.size()-1; i>=0; i--) {
-            parentConstrainView.removeView(currentBoardImages.get(i));
+        for (int i=currentBoardImages.size()-1; i>=0; i--) {
+            parentContrainView.removeView(currentBoardImages.get(i));
             currentBoardImages.remove(i);
         }
     }
@@ -196,14 +201,6 @@ public class ChessBoardActivity extends AppCompatActivity {
                 }
             }
         }
-    }
-
-    public void displayHighlight() {
-        // call method display drawable ~highlighting~ if !null display else clear
-    }
-
-    public void clearHighlight() {
-
     }
 
     // need method that places a piece on board display piece with coords
@@ -222,15 +219,16 @@ public class ChessBoardActivity extends AppCompatActivity {
         int resID = res.getIdentifier(mDrawableName , "drawable", getPackageName());
         newPiece.setImageResource(resID);
 
+
         newPiece.setId(xPosBoard * 10 + yPosBoard);
 
-        parentConstrainView.addView(newPiece);
+        parentContrainView.addView(newPiece);
 
         ConstraintSet constraintSet = new ConstraintSet();
-        constraintSet.clone(parentConstrainView);
+        constraintSet.clone(parentContrainView);
         constraintSet.connect(newPiece.getId(), ConstraintSet.LEFT, R.id.boardImage, ConstraintSet.LEFT, xPosToRender);
         constraintSet.connect(newPiece.getId(), ConstraintSet.TOP, R.id.boardImage, ConstraintSet.TOP, yPosToRender);
-        constraintSet.applyTo(parentConstrainView);
+        constraintSet.applyTo(parentContrainView);
 
         ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) newPiece.getLayoutParams();
         params.height = (int) (findViewById(R.id.boardImage).getHeight() / 8.0);
