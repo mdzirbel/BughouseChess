@@ -66,7 +66,7 @@ public class ChessBoard {
             if (Arrays.asList(allowedMoves).contains(attemptedMove)) { // If you can move there
                 // Check if you are taking an opponent's piece
                 if (getPieceFromPair(attemptedMove)!=null) { // If it's not null it's an opponent's piece
-                    // sendReserve(getTileFromPair(attemptedMove)); // TODO add this in once Max makes it // TODO make this return a pawn if needed
+                    MainActivity.coms.sendReserve(getPieceFromPair(attemptedMove)); // TODO add this in once Max makes it
                 }
                 board[x][y] = board[currentlySelectedBoard.getLeft()][currentlySelectedBoard.getRight()]; // Put your piece there
                 board[currentlySelectedBoard.getLeft()][currentlySelectedBoard.getRight()] = null; // Make the space you moved out of empty
