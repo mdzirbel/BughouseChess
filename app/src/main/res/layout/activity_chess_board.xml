@@ -12,11 +12,17 @@
         android:id="@+id/boardImage"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
         android:contentDescription="image for board"
-        app:layout_constraintBottom_toTopOf="@+id/topBottomReserveGuide"
+        app:layout_constraintBottom_toTopOf="@+id/whiteReserve"
+        app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintEnd_toStartOf="@+id/rightImageGuide"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="@+id/leftImageGuide"
-        app:layout_constraintTop_toTopOf="@+id/topImageGuide"
+        app:layout_constraintTop_toBottomOf="@+id/blackReserve"
         app:srcCompat="@drawable/chessgrid" />
 
     <android.support.constraint.Guideline
@@ -24,7 +30,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.020833334" />
+        app:layout_constraintGuide_percent="0.02" />
 
     <android.support.constraint.Guideline
         android:id="@+id/topImageGuide"
@@ -47,24 +53,6 @@
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.85" />
 
-    <TableRow
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:id="@+id/topReserve"
-        app:layout_constraintBottom_toTopOf="@+id/topImageGuide"
-        app:layout_constraintEnd_toStartOf="@+id/rightImageGuide"
-        app:layout_constraintStart_toEndOf="@+id/leftImageGuide"
-        app:layout_constraintTop_toTopOf="@+id/guideline7" />
-
-    <TableRow
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:id="@+id/bottomReserve"
-        app:layout_constraintBottom_toTopOf="@+id/guideline6"
-        app:layout_constraintEnd_toStartOf="@+id/rightImageGuide"
-        app:layout_constraintStart_toStartOf="@+id/leftImageGuide"
-        app:layout_constraintTop_toTopOf="@+id/topBottomReserveGuide" />
-
     <android.support.constraint.Guideline
         android:id="@+id/guideline6"
         android:layout_width="wrap_content"
@@ -78,5 +66,27 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.02" />
+
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/blackReserve"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/topImageGuide"
+        app:layout_constraintEnd_toStartOf="@+id/rightImageGuide"
+        app:layout_constraintStart_toStartOf="@+id/leftImageGuide"
+        app:layout_constraintTop_toTopOf="@+id/guideline7">
+
+    </android.support.constraint.ConstraintLayout>
+
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/whiteReserve"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/guideline6"
+        app:layout_constraintEnd_toStartOf="@+id/rightImageGuide"
+        app:layout_constraintStart_toEndOf="@+id/leftImageGuide"
+        app:layout_constraintTop_toBottomOf="@+id/topBottomReserveGuide">
+
+    </android.support.constraint.ConstraintLayout>
 
 </android.support.constraint.ConstraintLayout>
