@@ -1,20 +1,18 @@
 package com.example.matth.bughousechess;
 
 import android.content.res.Resources;
-import android.graphics.drawable.Drawable;
 import android.support.constraint.ConstraintLayout;
 import android.support.constraint.ConstraintSet;
-import android.support.v4.view.ViewCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MotionEvent;
 import android.os.Bundle;
 import android.view.View;
 import android.util.Log;
-import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 import android.widget.TableRow;
 import android.util.DisplayMetrics;
+
+import java.util.ArrayList;
 
 public class ChessBoardActivity extends AppCompatActivity {
 
@@ -26,6 +24,8 @@ public class ChessBoardActivity extends AppCompatActivity {
     private int[] imageViewWidthHeight = new int[2];
     private int[] topRowWidthHeight = new int[2];
     private int[] bottomRowWidthHeight = new int[2];
+    ArrayList<ImageView> currentBoardImages = new ArrayList<>();
+    ConstraintLayout parentContrainView = findViewById(R.id.chessboardview);
 
     // class member to save board variable
     public static ChessBoard board = new ChessBoard("w");
@@ -36,7 +36,7 @@ public class ChessBoardActivity extends AppCompatActivity {
         setContentView(R.layout.activity_chess_board);
 
 
-        findViewById(R.id.chessboardview).post(new Runnable() {
+        parentContrainView.post(new Runnable() {
             @Override
             public void run() {
                 // Instantiate ImageView object, set touch/click listener, get coords of top left
@@ -58,7 +58,7 @@ public class ChessBoardActivity extends AppCompatActivity {
                 bottomRowWidthHeight[0] = topRow.getWidth();
                 bottomRowWidthHeight[1] = topRow.getHeight();
                 bottomRow.getLocationOnScreen(topLeftCoordsBottomRow);
-                displayBoard();
+                displayEverything();
             }
         });
     }
@@ -94,11 +94,23 @@ public class ChessBoardActivity extends AppCompatActivity {
         }
     };
 
-    // TODO - finish this method (with board and maybe top/bottom rows)
-    public void displayBoard() {
-        // Fill reserve rows, place piece
-        ChessPiece[][] currentBoard = board.getBoard();
+    public void displayEverything() {
+        // Clear out everything
+        clearBoard();
+        // Refill board and reserve
 
+
+    }
+
+    public void clearBoard() {
+        for (int i=currentBoardImages.size()-1; i>=0; i++) {
+            parentContrainView.removeView(currentBoardImages.get(i));
+            currentBoardImages.remove(i);
+        }
+    }
+
+    public void diplayBoard() {
+        ChessPiece[][] currentBoard = board.getBoard();
         for (int x = 0; x < 8; x++) {
             for (int y = 0; y < 8; y++) {
                 if (board.tileHasPiece(x, y)) {
@@ -127,19 +139,20 @@ public class ChessBoardActivity extends AppCompatActivity {
 
         newPiece.setId(xPosBoard * 10 + yPosBoard);
 
-        ConstraintLayout layout = findViewById(R.id.chessboardview);
-        layout.addView(newPiece);
+        parentContrainView.addView(newPiece);
 
         ConstraintSet constraintSet = new ConstraintSet();
-        constraintSet.clone(layout);
+        constraintSet.clone(parentContrainView);
         constraintSet.connect(newPiece.getId(), ConstraintSet.LEFT, R.id.boardImage, ConstraintSet.LEFT, xPosToRender);
         constraintSet.connect(newPiece.getId(), ConstraintSet.TOP, R.id.boardImage, ConstraintSet.TOP, yPosToRender);
-        constraintSet.applyTo(layout);
+        constraintSet.applyTo(parentContrainView);
 
         Log.e("WIDTH","Width: " + findViewById(R.id.chessboardview).getWidth());
 
         ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) newPiece.getLayoutParams();
         params.height = (int) (findViewById(R.id.boardImage).getHeight() / 8.0);
         params.width = (int) (findViewById(R.id.boardImage).getWidth() / 8.0);
+
+        currentBoardImages.add(newPiece);
     }
 }
