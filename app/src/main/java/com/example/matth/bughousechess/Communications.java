@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Message;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
@@ -37,87 +38,159 @@ public class Communications
 {
     ConnectedThread conThread;
     private static final String TAG = "MY_APP_DEBUG_TAG";
+    final MainActivity.MyAdapter dataAdapter;
     static LinkedList<BluetoothDevice> candidateDevices = new LinkedList<BluetoothDevice>();
-    public Communications(Context context, MainActivity.MyAdapter dataAdapter, FragmentManager fm)
+    final MainActivity mainActivity;
+    public Communications(Context context, MainActivity.MyAdapter dataAdapter, FragmentManager fm, MainActivity mainActivity)
     {
         this.fm = fm;
-        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        this.dataAdapter = dataAdapter;
+        this.mainActivity = mainActivity;
+        scanAndUpdateRecycleView(context);
+    }
+    void reset(Context context)
+    {
+        conThread.cancel();
+        conThread = null;
+        accepted = false;
+        scanAndUpdateRecycleView(context);
+        MainActivity.startListening(context);
+    }
+    void scanAndUpdateRecycleView(Context context)
+    {
+        final BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBluetoothAdapter == null)
         {
             Toast.makeText(context, "Bluetooth not supported", Toast.LENGTH_SHORT).show();
         }
         else
         {
+            mainActivity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
+                    if (pairedDevices.size() > 0) {
+                        candidateDevices.clear();
+                        // There are paired devices. Get the name and address of each paired device.
+                        for (BluetoothDevice device : pairedDevices) {
+                            //String deviceName = device.getName();
+                            //String deviceHardwareAddress = device.getAddress(); // MAC address
+                            int type = device.getBluetoothClass().getDeviceClass();
+                            if(type==BluetoothClass.Device.PHONE_SMART)
+                            {
+                                candidateDevices.add(device);
+                            }
+                            //Log.d("Max: 41", deviceName+":"+deviceHardwareAddress+":"+(type==BluetoothClass.Device.PHONE_SMART));
+                        }
+                        dataAdapter.updatePhones();
+                    }
+                }
+            });
             /*if (!mBluetoothAdapter.isEnabled()) {
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 context.startActivity(enableBtIntent, Activity.REQUEST_ENABLE_BT);
             }*/
-            Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
-            if (pairedDevices.size() > 0) {
-                // There are paired devices. Get the name and address of each paired device.
-                for (BluetoothDevice device : pairedDevices) {
-                    //String deviceName = device.getName();
-                    //String deviceHardwareAddress = device.getAddress(); // MAC address
-                    int type = device.getBluetoothClass().getDeviceClass();
-                    if(type==BluetoothClass.Device.PHONE_SMART)
-                    {
-                        candidateDevices.add(device);
-                    }
-                    //Log.d("Max: 41", deviceName+":"+deviceHardwareAddress+":"+(type==BluetoothClass.Device.PHONE_SMART));
-                }
-                dataAdapter.updatePhones();
-            }
         }
     }
-    public void connectTo(String address)
+    public void connectTo(String address, Context context)
     {
-        new ConnectThread(address).start();
+        weSendInvite = true;
+        Log.d(TAG, "attempting to connect");
+        new ConnectThread(address, context).start();
     }
+    int uuidNum = 0;
     class ConnectThread extends Thread
     {
-        String address;
-        public ConnectThread(String add)
+        private final String address;
+        private final Context context;
+        public ConnectThread(String add, Context context)
         {
             this.address = add;
+            this.context = context;
         }
         public void run() {
             BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
             BluetoothDevice device = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address);
             try {
-                BluetoothSocket sock = device.createInsecureRfcommSocketToServiceRecord(UUID.fromString("a56f3f83-5b88-4101-9eb1-8109bb9eebb9"));
-                sock.connect();
-                new ConnectedThread(sock).start();//a56f3f83-5b88-4101-9eb1-8109bb9eebb9
+                while(true)
+                {
+                    final BluetoothSocket sock = device.createInsecureRfcommSocketToServiceRecord(MainActivity.uuids[uuidNum]);
+                    uuidNum++;
+                    if(uuidNum>=100)
+                    {
+                        break;
+                    }
+                    new cancelConnectThread(sock).start();
+                    sock.connect();
+                    Log.d(TAG, "connected?");
+                    if (sock.isConnected())
+                    {
+                        new ConnectedThread(sock, context).start();//a56f3f83-5b88-4101-9eb1-8109bb9eebb9
+                        break;
+                    }
+                    else
+                    {
+                        Log.d(TAG, "uuid "+uuidNum+" failed");
+                    }
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
-    public void receiveConnectionFrom(BluetoothSocket sock)
+    class cancelConnectThread extends Thread
     {
+        final BluetoothSocket sock;
+        public cancelConnectThread(BluetoothSocket s)
+        {
+            sock = s;
+        }
+        public void run() {
+            try {
+                Thread.sleep(3000);
+                if(!sock.isConnected())
+                {
+                    sock.close();
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            Log.d(TAG, "stop cancel");
+        }
+    }
+    public void receiveConnectionFrom(BluetoothSocket sock, Context context)
+    {
+        weSendInvite = false;
         try {
-            new ConnectedThread(sock).start();
+            new ConnectedThread(sock, context).start();
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
     }
-    static void gotoChess()
+    static void gotoChess(Context context)
     {
         Log.d(TAG, "GO TO CHESS");
+        Intent intent = new Intent(context, ChessBoardActivity.class);
+        context.startActivity(intent);
     }
     static boolean accepted = false;
-    static void acceptGame()
+    static void acceptGame(Context context)
     {
         if(accepted)
         {
-            gotoChess();//go if accepted is already set
+            gotoChess(context);//go if accepted is already set
         }
         accepted = true;
         MainActivity.coms.conThread.write("A");
+        //MainActivity.coms.reset(context);
     }
-    static void declineGame()
+    static void declineGame(Context context)
     {
         accepted = false;
         MainActivity.coms.conThread.write("D");
+        MainActivity.coms.reset(context);
     }
     public static class FireMissilesDialogFragment extends DialogFragment {
         @Override
@@ -127,12 +200,12 @@ public class Communications
             builder.setMessage("Do you want to play a game with "+getArguments().getString("name")+"?")
                     .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
-                            acceptGame();
+                            acceptGame(getContext());
                         }
                     })
                     .setNegativeButton("No", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
-                            declineGame();
+                            declineGame(getContext());
                         }
                     });
             // Create the AlertDialog object and return it
@@ -165,6 +238,10 @@ public class Communications
             // Use the Builder class for convenient dialog construction
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
             String mess = "They decliened your invitation";
+            if(getArguments().getBoolean("hostDeclined"))
+            {
+                mess = "They canceled their invitation";
+            }
             builder.setMessage(mess)
                     .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
@@ -181,7 +258,8 @@ public class Communications
     }
     FragmentManager fm = null;
     FireMissilesDialogFragment fmdf;
-    boolean parse(String str)
+    boolean weSendInvite = false;
+    boolean parse(String str, Context context)
     {
         String[] messageParts = str.split("\\|");
         if(messageParts[0].equals("R"))
@@ -206,18 +284,23 @@ public class Communications
         {
             if(accepted)
             {
-                gotoChess();//go if already received accepted
+                gotoChess(context);//go if we already accepted
             }
+            //reset(context);
             accepted = true;
         }
         else if(messageParts[0].equals("D"))
         {
-            if(fmdf.isVisible())
+            if(fmdf.getDialog().isShowing())
             {
                 fmdf.dismiss();
                 TheyDecliened TD = new TheyDecliened();
+                Bundle bundle = new Bundle();
+                bundle.putBoolean("hostDeclined", !weSendInvite);
+                TD.setArguments(bundle);
                 TD.show(fm, "FireMissiles");
             }
+            reset(context);
             Log.d(TAG, "Cancel dialogs");
         }
         return true;
@@ -227,16 +310,14 @@ public class Communications
         private final BluetoothSocket mmSocket;
         private final BufferedReader mmInStream;
         private final PrintWriter mmOutStream;
-        private byte[] mmBuffer; // mmBuffer store for the stream
+        private final Context context;
 
-        public ConnectedThread(BluetoothSocket socket) throws UnsupportedEncodingException {
+        public ConnectedThread(BluetoothSocket socket, Context context) throws UnsupportedEncodingException {
             conThread = this;
             mmSocket = socket;
             InputStream tmpIn = null;
             OutputStream tmpOut = null;
-
-            // Get the input and output streams; using temp objects because
-            // member streams are final.
+            this.context = context;
             try {
                 tmpIn = socket.getInputStream();
             } catch (IOException e) {
@@ -247,7 +328,6 @@ public class Communications
             } catch (IOException e) {
                 Log.e(TAG, "Error occurred when creating output stream", e);
             }
-            //mmInStream = (BufferedInputStream) tmpIn;
             mmInStream = new BufferedReader(new InputStreamReader(tmpIn, "UTF-8"));
             mmOutStream = new PrintWriter(tmpOut);
             if(MainActivity.name.equals(""))
@@ -261,15 +341,14 @@ public class Communications
         }
 
         public void run() {
-            Log.d(TAG, "Start listening");
+            Log.d(TAG, "Starting communications");
             while (true) {
                 try {
                     // Read from the InputStream.
                     String str = mmInStream.readLine();
-                    Log.d(TAG, "<- "+str);
-                    boolean con = parse(str);
-                    if(!con)
-                    {
+                    Log.d(TAG, "<- " + str);
+                    boolean con = parse(str, context);
+                    if (!con) {
                         UserNoName fmdf = new UserNoName();
                         Bundle bundle = new Bundle();
                         bundle.putBoolean("me", MainActivity.name.equals(""));
@@ -296,6 +375,8 @@ public class Communications
         // Call this method from the main activity to shut down the connection.
         public void cancel() {
             try {
+                mmOutStream.close();
+                mmInStream.close();
                 mmSocket.close();
             } catch (IOException e) {
                 Log.e(TAG, "Could not close the connect socket", e);

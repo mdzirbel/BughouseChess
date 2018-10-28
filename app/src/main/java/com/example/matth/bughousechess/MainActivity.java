@@ -3,6 +3,7 @@ package com.example.matth.bughousechess;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
+import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -36,9 +37,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Intent intent = new Intent(MainActivity.this, ChessBoardActivity.class);
-        startActivity(intent);
-
+        /*Intent intent = new Intent(MainActivity.this, ChessBoardActivity.class);
+        startActivity(intent);*/
+        for(int i = 0; i < 100; i++)
+        {
+            uuids[i] = UUID.nameUUIDFromBytes(String.valueOf(i*56+10).getBytes());
+        }
         nameText = (EditText) findViewById(R.id.editTextName);
 
         nameText.addTextChangedListener(new TextWatcher() {
@@ -73,23 +77,48 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView.setAdapter(mAdapter);
 
 
-        coms = new Communications(getApplicationContext(), mAdapter, getSupportFragmentManager());
-        new ListenerClass().start();
+        coms = new Communications(getApplicationContext(), mAdapter, getSupportFragmentManager(), this);
+        startListening(getApplicationContext());
     }
+    static UUID[] uuids = new UUID[100];
     void setButtons(boolean enabled)
     {
         mAdapter.enabled = enabled;
         mAdapter.notifyDataSetChanged();
     }
-    class ListenerClass extends Thread
+    static ListenerClass listener;
+    static void startListening(Context context)
     {
+        if(listener==null || !listener.isAlive())
+        {
+            listener = new ListenerClass(context);
+            listener.start();
+        }
+    }
+    static int uuidNum = 0;
+    static class ListenerClass extends Thread
+    {
+        final Context context;
+        public ListenerClass(Context context)
+        {
+            this.context = context;
+        }
         public void run()
         {
             try {
-                BluetoothServerSocket sock = BluetoothAdapter.getDefaultAdapter().listenUsingInsecureRfcommWithServiceRecord("Max's Bluetooth communication system", UUID.fromString("a56f3f83-5b88-4101-9eb1-8109bb9eebb9"));
+                Log.i(TAG, "waiting for connection");
+                BluetoothServerSocket sock = BluetoothAdapter.getDefaultAdapter().listenUsingInsecureRfcommWithServiceRecord("Max's Bluetooth communication system", uuids[uuidNum]);
+                uuidNum++;
                 BluetoothSocket socket = sock.accept();
-                coms.receiveConnectionFrom(socket);
-                Log.i(TAG, "accepted");
+                if(socket!=null)
+                {
+                    coms.receiveConnectionFrom(socket, context);
+                    Log.i(TAG, "accepted");
+                }
+                else
+                {
+                    Log.i(TAG, "failed");
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -151,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
             {
                 //Toast.makeText(getApplicationContext(), "Connecting to "+coms.candidateDevices.get(position).getName(), Toast.LENGTH_SHORT).show();
                 ((Button) view).setText("Connecting...");
-                coms.connectTo(coms.candidateDevices.get(position).getAddress());
+                coms.connectTo(coms.candidateDevices.get(position).getAddress(), getApplicationContext());
             }
         }
         // Return the size of your dataset (invoked by the layout manager)
