@@ -1,20 +1,30 @@
 package com.example.matth.bughousechess;
 
+import android.support.constraint.ConstraintLayout;
+import android.support.constraint.ConstraintSet;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MotionEvent;
 import android.os.Bundle;
 import android.view.View;
 import android.util.Log;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TableRow;
-
+import android.util.DisplayMetrics;
 
 public class ChessBoardActivity extends AppCompatActivity {
 
     // class member variable to save the X,Y coordinates
     private float[] lastTouchDownXY = new float[2];
+    private int[] topLeftCoordsImageView = new int[2];
+    private int[] topLeftCoordsTopRow = new int[2];
+    private int[] topLeftCoordsBottomRow = new int[2];
+    private int[] imageViewWidthHeight = new int[2];
+    private int[] topRowWidthHeight = new int[2];
+    private int[] bottomRowWidthHeight = new int[2];
+
     // class member to save board variable
-    static ChessBoard board = new ChessBoard(null);
+    public static ChessBoard board = new ChessBoard("w");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,18 +35,23 @@ public class ChessBoardActivity extends AppCompatActivity {
         ImageView imageView = findViewById(R.id.boardImage);
         imageView.setOnTouchListener(touchListener);
         imageView.setOnClickListener(clickListener);
-        int[] topLeftImageView = new int[2];
-        imageView.getLocationOnScreen(topLeftImageView);
+        imageViewWidthHeight[0] = imageView.getWidth();
+        imageViewWidthHeight[1] = imageView.getHeight();
+        imageView.getLocationOnScreen(topLeftCoordsImageView);
 
         // Instantiate top TableRow object, get coords of top left
         TableRow topRow = findViewById(R.id.topReserve);
-        int[] topLeftTopRow = new int[2];
-        topRow.getLocationOnScreen(topLeftTopRow);
+        topRowWidthHeight[0] = topRow.getWidth();
+        topRowWidthHeight[1] = topRow.getHeight();
+        topRow.getLocationOnScreen(topLeftCoordsTopRow);
 
         // Instantiate bottom TableRow object, get coords of top left
         TableRow bottomRow = findViewById(R.id.bottomReserve);
-        int[] topLeftBottomRow = new int[2];
-        bottomRow.getLocationOnScreen(topLeftBottomRow);
+        bottomRowWidthHeight[0] = topRow.getWidth();
+        bottomRowWidthHeight[1] = topRow.getHeight();
+        bottomRow.getLocationOnScreen(topLeftCoordsBottomRow);
+
+        displayBoard();
     }
 
     private View.OnTouchListener touchListener = new View.OnTouchListener() {
@@ -69,9 +84,35 @@ public class ChessBoardActivity extends AppCompatActivity {
     };
 
     // TODO - finish this method (with board and maybe top/bottom rows)
-    public void updateBoard() {
+    public void displayBoard() {
+        // Fill reserve rows, place piece
+        displayPiece(1, 1);
 
     }
+
+    // need method that places a piece on board display piece with coords
+    public void displayPiece(int xPosBoard, int yPosBoard) {
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+
+        int xPosToRender = (imageViewWidthHeight[0] / 8 * xPosBoard);
+        int yPosToRender = (imageViewWidthHeight[1] / 8 * yPosBoard);
+
+        ImageView newPiece = new ImageView(this);
+        newPiece.setImageResource(R.drawable.blackbishoppiece);
+        newPiece.setId(3+1);
+
+        ConstraintLayout layout = findViewById(R.id.chessboardview);
+        layout.addView(newPiece);
+
+        ConstraintSet constraintSet = new ConstraintSet();
+        constraintSet.clone(layout);
+        constraintSet.connect(newPiece.getId(), ConstraintSet.LEFT, R.id.boardImage, ConstraintSet.LEFT, xPosToRender);
+        constraintSet.connect(newPiece.getId(), ConstraintSet.TOP, R.id.boardImage, ConstraintSet.TOP, yPosToRender);
+        constraintSet.applyTo(layout);
+
+        ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) newPiece.getLayoutParams();
+        params.height = findViewById(R.id.boardImage).getHeight()/8;
+        params.width = findViewById(R.id.boardImage).getWidth()/8;
+    }
 }
-
-
