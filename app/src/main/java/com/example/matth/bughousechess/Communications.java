@@ -15,6 +15,7 @@ import android.os.Message;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -120,7 +121,7 @@ public class Communications
                     {
                         break;
                     }
-                    new cancelConnectThread(sock).start();
+                    //new cancelConnectThread(sock).start();
                     sock.connect();
                     Log.d(TAG, "connected?");
                     if (sock.isConnected())
@@ -175,6 +176,28 @@ public class Communications
         Intent intent = new Intent(context, ChessBoardActivity.class);
         context.startActivity(intent);
     }
+
+    void checkMate(String winnerTeam)
+    {
+        StaleCheckDialog SCD = new StaleCheckDialog();
+        Bundle bundle = new Bundle();
+        bundle.putBoolean("check", true);
+        bundle.putString("team", winnerTeam);
+        SCD.setArguments(bundle);
+        SCD.show(fm, "FireMissiles");
+        MainActivity.coms.conThread.write("C|"+(winnerTeam.equals("black")?"white":"black"));
+    }
+    void staleMate(String winnerTeam)
+    {
+        StaleCheckDialog SCD = new StaleCheckDialog();
+        Bundle bundle = new Bundle();
+        bundle.putBoolean("check", false);
+        bundle.putString("team", winnerTeam);
+        SCD.setArguments(bundle);
+        SCD.show(fm, "FireMissiles");
+        MainActivity.coms.conThread.write("S|"+(winnerTeam.equals("black")?"white":"black"));
+    }
+
     static boolean accepted = false;
     static void acceptGame(Context context)
     {
@@ -191,6 +214,26 @@ public class Communications
         accepted = false;
         MainActivity.coms.conThread.write("D");
         MainActivity.coms.reset(context);
+    }
+    public static class StaleCheckDialog extends DialogFragment {
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            // Use the Builder class for convenient dialog construction
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            String mess = "Stalemate! "+getArguments().getString("team")+" wins";
+            if(getArguments().getBoolean("check"))
+            {
+                mess = "Checkmate! "+getArguments().getString("team")+" wins";
+            }
+            builder.setMessage(mess)
+                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            Log.d(TAG, "Ok");
+                        }
+                    });
+            // Create the AlertDialog object and return it
+            return builder.create();
+        }
     }
     public static class FireMissilesDialogFragment extends DialogFragment {
         @Override
@@ -302,6 +345,24 @@ public class Communications
             }
             reset(context);
             Log.d(TAG, "Cancel dialogs");
+        }
+        else if(messageParts[0].equals("S"))
+        {
+            StaleCheckDialog SCD = new StaleCheckDialog();
+            Bundle bundle = new Bundle();
+            bundle.putBoolean("check", false);
+            bundle.putString("team", messageParts[1]);
+            SCD.setArguments(bundle);
+            SCD.show(fm, "FireMissiles");
+        }
+        else if(messageParts[0].equals("C"))
+        {
+            StaleCheckDialog SCD = new StaleCheckDialog();
+            Bundle bundle = new Bundle();
+            bundle.putBoolean("check", true);
+            bundle.putString("team", messageParts[1]);
+            SCD.setArguments(bundle);
+            SCD.show(fm, "FireMissiles");
         }
         return true;
     }
