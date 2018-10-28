@@ -94,12 +94,12 @@ public class ChessBoardActivity extends AppCompatActivity {
     public void displayPiece(int xPosBoard, int yPosBoard) {
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+
         int xPosToRender = (imageViewWidthHeight[0] / 8 * xPosBoard);
         int yPosToRender = (imageViewWidthHeight[1] / 8 * yPosBoard);
 
         ImageView newPiece = new ImageView(this);
         newPiece.setImageResource(R.drawable.blackbishoppiece);
-        newPiece.setElevation(5);
         newPiece.setId(3+1);
 
         ConstraintLayout layout = findViewById(R.id.chessboardview);
@@ -110,5 +110,9 @@ public class ChessBoardActivity extends AppCompatActivity {
         constraintSet.connect(newPiece.getId(), ConstraintSet.LEFT, R.id.boardImage, ConstraintSet.LEFT, xPosToRender);
         constraintSet.connect(newPiece.getId(), ConstraintSet.TOP, R.id.boardImage, ConstraintSet.TOP, yPosToRender);
         constraintSet.applyTo(layout);
+
+        ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) newPiece.getLayoutParams();
+        params.height = findViewById(R.id.boardImage).getHeight()/8;
+        params.width = findViewById(R.id.boardImage).getWidth()/8;
     }
 }
