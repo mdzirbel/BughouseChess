@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.util.Log;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 import android.widget.TableRow;
 import android.util.DisplayMetrics;
@@ -50,9 +51,15 @@ public class ChessBoardActivity extends AppCompatActivity {
         bottomRowWidthHeight[0] = topRow.getWidth();
         bottomRowWidthHeight[1] = topRow.getHeight();
         bottomRow.getLocationOnScreen(topLeftCoordsBottomRow);
-
-        displayBoard();
+        imageView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                displayBoard();
+            }
+        });
     }
+
+
 
     private View.OnTouchListener touchListener = new View.OnTouchListener() {
         public boolean onTouch(View v, MotionEvent event) {
@@ -101,6 +108,7 @@ public class ChessBoardActivity extends AppCompatActivity {
         ImageView newPiece = new ImageView(this);
         newPiece.setImageResource(R.drawable.blackbishoppiece);
         newPiece.setId(3+1);
+        newPiece.setScaleType(ImageView.ScaleType.FIT_XY);
 
         ConstraintLayout layout = findViewById(R.id.chessboardview);
         layout.addView(newPiece);
@@ -111,8 +119,10 @@ public class ChessBoardActivity extends AppCompatActivity {
         constraintSet.connect(newPiece.getId(), ConstraintSet.TOP, R.id.boardImage, ConstraintSet.TOP, yPosToRender);
         constraintSet.applyTo(layout);
 
+        Log.e("WIDTH","Width: "+findViewById(R.id.chessboardview).getWidth());
+
         ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) newPiece.getLayoutParams();
-        params.height = findViewById(R.id.boardImage).getHeight()/8;
-        params.width = findViewById(R.id.boardImage).getWidth()/8;
+        params.height = (int) (findViewById(R.id.boardImage).getHeight()/8.0);
+        params.width = (int) (findViewById(R.id.boardImage).getWidth()/8.0);
     }
 }

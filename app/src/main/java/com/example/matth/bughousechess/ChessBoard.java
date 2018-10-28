@@ -58,12 +58,17 @@ public class ChessBoard {
                 }
             }
             else { // Placing a piece from reserve //TODO finish
-                if (hasPiece(x,y)) { // Can't place piece from reserve; deselect //TODO make it so pawns can't be placed on 1st/last
+                if (currentlySelectedReserve.getRight().equals("pawn") && (x==0 || x==7)) { // Don't let pawns be placed on first or last rank
                     deselect();
                 }
-                else { // Can place piece from reserve, place piece and decrement reserve
-                    decrementReserve(currentlySelectedReserve.getLeft(), currentlySelectedReserve.getRight());
+                else {
+                    if (tileHasPiece(x, y)) { // Can't place piece from reserve; deselect //TODO make it so pawns can't be placed on 1st/last
 
+                        deselect();
+                    } else { // Can place piece from reserve, place piece and decrement reserve
+                        decrementReserve(currentlySelectedReserve.getLeft(), currentlySelectedReserve.getRight());
+
+                    }
                 }
             }
         }
@@ -123,7 +128,7 @@ public class ChessBoard {
     private ChessPiece getPieceFromPair(Pair<Integer, Integer> p){
         return board[p.getLeft()][p.getRight()];
     }
-    private boolean hasPiece(int x, int y) {
+    private boolean tileHasPiece(int x, int y) {
         return board[x][y]!=null;
     }
     private void deselect() {
