@@ -9,11 +9,8 @@ import android.os.Bundle;
 import android.view.View;
 import android.util.Log;
 import android.widget.ImageView;
-import android.widget.TableRow;
 import android.util.DisplayMetrics;
 import android.widget.TextView;
-
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,7 +28,8 @@ public class ChessBoardActivity extends AppCompatActivity {
     private int[] topRowWidthHeight = new int[2];
     private int[] bottomRowWidthHeight = new int[2];
     ArrayList<ImageView> currentBoardImages = new ArrayList<>();
-    ConstraintLayout parentContrainView;
+    ConstraintLayout parentConstrainView;
+    ImageView pieceHightlight;
 
     // class member to save board variable
     public static ChessBoard board = new ChessBoard("w");
@@ -41,9 +39,9 @@ public class ChessBoardActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chess_board);
 
-        parentContrainView = findViewById(R.id.chessboardview);
+        parentConstrainView = findViewById(R.id.chessboardview);
 
-        parentContrainView.post(new Runnable() {
+        parentConstrainView.post(new Runnable() {
             @Override
             public void run() {
                 // Instantiate ImageView object, set touch/click listener, get coords of top left
@@ -67,7 +65,6 @@ public class ChessBoardActivity extends AppCompatActivity {
                 bottomRow.getLocationOnScreen(topLeftCoordsBottomRow);*/
                 updateReserve(board.getBlackReserve(), true);
                 updateReserve(board.getWhiteReserve(), false);
-
 
                 displayEverything();
             }
@@ -184,8 +181,8 @@ public class ChessBoardActivity extends AppCompatActivity {
     }
 
     public void clearBoard() {
-        for (int i=currentBoardImages.size()-1; i>=0; i--) {
-            parentContrainView.removeView(currentBoardImages.get(i));
+        for (int i = currentBoardImages.size()-1; i>=0; i--) {
+            parentConstrainView.removeView(currentBoardImages.get(i));
             currentBoardImages.remove(i);
         }
     }
@@ -199,6 +196,14 @@ public class ChessBoardActivity extends AppCompatActivity {
                 }
             }
         }
+    }
+
+    public void displayHighlight() {
+        // call method display drawable ~highlighting~ if !null display else clear
+    }
+
+    public void clearHighlight() {
+
     }
 
     // need method that places a piece on board display piece with coords
@@ -217,16 +222,15 @@ public class ChessBoardActivity extends AppCompatActivity {
         int resID = res.getIdentifier(mDrawableName , "drawable", getPackageName());
         newPiece.setImageResource(resID);
 
-
         newPiece.setId(xPosBoard * 10 + yPosBoard);
 
-        parentContrainView.addView(newPiece);
+        parentConstrainView.addView(newPiece);
 
         ConstraintSet constraintSet = new ConstraintSet();
-        constraintSet.clone(parentContrainView);
+        constraintSet.clone(parentConstrainView);
         constraintSet.connect(newPiece.getId(), ConstraintSet.LEFT, R.id.boardImage, ConstraintSet.LEFT, xPosToRender);
         constraintSet.connect(newPiece.getId(), ConstraintSet.TOP, R.id.boardImage, ConstraintSet.TOP, yPosToRender);
-        constraintSet.applyTo(parentContrainView);
+        constraintSet.applyTo(parentConstrainView);
 
         ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) newPiece.getLayoutParams();
         params.height = (int) (findViewById(R.id.boardImage).getHeight() / 8.0);

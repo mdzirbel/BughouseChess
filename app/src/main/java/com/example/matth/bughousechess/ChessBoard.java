@@ -465,12 +465,7 @@ public class ChessBoard {
                 break;
             default:
                 assert false : "You wound up with the default case for piece type. That shouldn't happen";
-
-
         }
-
         return allowedMoves;
-
     }
-
 }
