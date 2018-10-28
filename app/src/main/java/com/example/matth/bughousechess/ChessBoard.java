@@ -1,5 +1,7 @@
 package com.example.matth.bughousechess;
 
+import android.util.Log;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.MutablePair;
 
@@ -47,20 +49,24 @@ public class ChessBoard {
             if (currentlySelectedReserve==null) { // If you don't have a piece selected
                 if (tileHasPiece(x,y) && currentPlayer.equals(getPieceAt(new MutablePair<>(x, y)).team)) { // If you select one of your pieces
                     currentlySelectedBoard = new MutablePair<>(x, y); // select piece
+                    Log.i("CLICK", "Selected board piece at ("+x+", "+y+")");
                 }
             }
             else { // Placing a piece from reserve
                 if (currentlySelectedReserve.getRight().equals("pawn") && (x==0 || x==7)) { // Don't let pawns be placed on first or last rank
                     deselect();
+                    Log.i("CLICK", "Deselected because you can't place a pawn from reserve in first or last rank");
                 }
                 else {
                     if (tileHasPiece(x, y)) { // Can't place piece from reserve; deselect
                         deselect();
+                        Log.i("CLICK", "Deselected because you can't place on preexisting piece");
                     } else { // Can place piece from reserve, place piece and decrement reserve
                         decrementReserve(currentlySelectedReserve.getLeft(), currentlySelectedReserve.getRight());
                         board[x][y] = new ChessPiece(currentlySelectedReserve.getLeft(), currentlySelectedReserve.getRight());
                         board[x][y].hasMoved = true;
                         switchCurrentPlayer();
+                        Log.i("CLICK", "Placed piece on board");
                     }
                 }
             }
@@ -78,8 +84,10 @@ public class ChessBoard {
                 board[x][y].hasMoved = true;
                 board[currentlySelectedBoard.getLeft()][currentlySelectedBoard.getRight()] = null; // Make the space you moved out of empty
                 switchCurrentPlayer();
+                Log.i("CLICK", "Moving piece");
             }
             deselect();
+            Log.i("CLICK", "Deselecting");
         }
     }
     public void clickOnReserve(String team, String type) {
@@ -330,54 +338,6 @@ public class ChessBoard {
                         break;
                     }
                 }
-                // up
-                for (int i=1; i<8; i++) {
-                    int newX = x;
-                    int newY = y-i;
-                    if (isEmpty(newX, newY)) {
-                        allowedMoves.add(new MutablePair<>(newX,newY));
-                    }
-                    else if (isEnemy(team, x, y)) {
-                        allowedMoves.add(new MutablePair<>(newX,newY));
-                        break;
-                    }
-                }
-                // down
-                for (int i=1; i<8; i++) {
-                    int newX = x;
-                    int newY = y+i;
-                    if (isEmpty(newX, newY)) {
-                        allowedMoves.add(new MutablePair<>(newX,newY));
-                    }
-                    else if (isEnemy(team, x, y)) {
-                        allowedMoves.add(new MutablePair<>(newX,newY));
-                        break;
-                    }
-                }
-                // right
-                for (int i=1; i<8; i++) {
-                    int newX = x+i;
-                    int newY = y;
-                    if (isEmpty(newX, newY)) {
-                        allowedMoves.add(new MutablePair<>(newX,newY));
-                    }
-                    else if (isEnemy(team, x, y)) {
-                        allowedMoves.add(new MutablePair<>(newX,newY));
-                        break;
-                    }
-                }
-                // left
-                for (int i=1; i<8; i++) {
-                    int newX = x-i;
-                    int newY = y;
-                    if (isEmpty(newX, newY)) {
-                        allowedMoves.add(new MutablePair<>(newX,newY));
-                    }
-                    else if (isEnemy(team, x, y)) {
-                        allowedMoves.add(new MutablePair<>(newX,newY));
-                        break;
-                    }
-                }
                 break;
             case("king"):
                 if (isEmptyOrEnemy(team, x-1,y-1)) {
@@ -454,7 +414,57 @@ public class ChessBoard {
                         break;
                     }
                 }
+                // up
+                for (int i=1; i<8; i++) {
+                    int newX = x;
+                    int newY = y-i;
+                    if (isEmpty(newX, newY)) {
+                        allowedMoves.add(new MutablePair<>(newX,newY));
+                    }
+                    else if (isEnemy(team, x, y)) {
+                        allowedMoves.add(new MutablePair<>(newX,newY));
+                        break;
+                    }
+                }
+                // down
+                for (int i=1; i<8; i++) {
+                    int newX = x;
+                    int newY = y+i;
+                    if (isEmpty(newX, newY)) {
+                        allowedMoves.add(new MutablePair<>(newX,newY));
+                    }
+                    else if (isEnemy(team, x, y)) {
+                        allowedMoves.add(new MutablePair<>(newX,newY));
+                        break;
+                    }
+                }
+                // right
+                for (int i=1; i<8; i++) {
+                    int newX = x+i;
+                    int newY = y;
+                    if (isEmpty(newX, newY)) {
+                        allowedMoves.add(new MutablePair<>(newX,newY));
+                    }
+                    else if (isEnemy(team, x, y)) {
+                        allowedMoves.add(new MutablePair<>(newX,newY));
+                        break;
+                    }
+                }
+                // left
+                for (int i=1; i<8; i++) {
+                    int newX = x-i;
+                    int newY = y;
+                    if (isEmpty(newX, newY)) {
+                        allowedMoves.add(new MutablePair<>(newX,newY));
+                    }
+                    else if (isEnemy(team, x, y)) {
+                        allowedMoves.add(new MutablePair<>(newX,newY));
+                        break;
+                    }
+                }
                 break;
+            default:
+                assert false : "You wound up with the default case for piece type. That shouldn't happen";
 
 
         }

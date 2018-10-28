@@ -26,7 +26,7 @@ public class ChessBoardActivity extends AppCompatActivity {
     private int[] topRowWidthHeight = new int[2];
     private int[] bottomRowWidthHeight = new int[2];
     ArrayList<ImageView> currentBoardImages = new ArrayList<>();
-    ConstraintLayout parentContrainView = findViewById(R.id.chessboardview);
+    ConstraintLayout parentContrainView;
 
     // class member to save board variable
     public static ChessBoard board = new ChessBoard("w");
@@ -36,6 +36,7 @@ public class ChessBoardActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chess_board);
 
+        parentContrainView = findViewById(R.id.chessboardview);
 
         parentContrainView.post(new Runnable() {
             @Override
@@ -112,13 +113,11 @@ public class ChessBoardActivity extends AppCompatActivity {
             float x = lastTouchDownXY[0];
             float y = lastTouchDownXY[1];
 
-            // use the coordinates for whatever
-            Log.i("TAG", "onLongClick: x = " + x + ", y = " + y);
-
             // process click
             int xPos = (int) (x / v.getWidth() * 8);
             int yPos = (int) (y / v.getHeight() * 8);
             board.clickOnBoard(xPos, yPos);
+            displayEverything();
         }
     };
 
@@ -131,7 +130,7 @@ public class ChessBoardActivity extends AppCompatActivity {
     }
 
     public void clearBoard() {
-        for (int i=currentBoardImages.size()-1; i>=0; i++) {
+        for (int i=currentBoardImages.size()-1; i>=0; i--) {
             parentContrainView.removeView(currentBoardImages.get(i));
             currentBoardImages.remove(i);
         }
@@ -174,8 +173,6 @@ public class ChessBoardActivity extends AppCompatActivity {
         constraintSet.connect(newPiece.getId(), ConstraintSet.LEFT, R.id.boardImage, ConstraintSet.LEFT, xPosToRender);
         constraintSet.connect(newPiece.getId(), ConstraintSet.TOP, R.id.boardImage, ConstraintSet.TOP, yPosToRender);
         constraintSet.applyTo(parentContrainView);
-
-        Log.e("WIDTH","Width: " + findViewById(R.id.chessboardview).getWidth());
 
         ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) newPiece.getLayoutParams();
         params.height = (int) (findViewById(R.id.boardImage).getHeight() / 8.0);
