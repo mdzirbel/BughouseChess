@@ -35,7 +35,6 @@ public class ChessBoardActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chess_board);
 
-
         findViewById(R.id.chessboardview).post(new Runnable() {
             @Override
             public void run() {
@@ -123,7 +122,6 @@ public class ChessBoardActivity extends AppCompatActivity {
         String mDrawableName = chessPiece.getTeam() + chessPiece.getPieceType() + "piece";
         int resID = res.getIdentifier(mDrawableName , "drawable", getPackageName());
         newPiece.setImageResource(resID);
-
 
         newPiece.setId(xPosBoard * 10 + yPosBoard);
 

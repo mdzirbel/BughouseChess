@@ -51,7 +51,7 @@ public class ChessBoard {
                 }
             }
             else { // Placing a piece from reserve
-                if (currentlySelectedReserve.getRight().equals("pawn") && (x==0 || x==7)) { // Don't let pawns be placed on first or last rank
+                if (currentlySelectedReserve.getRight().equals("pawn") && (x==0 || x==7 )) { // Don't let pawns be placed on first or last rank
                     deselect();
                 }
                 else {
