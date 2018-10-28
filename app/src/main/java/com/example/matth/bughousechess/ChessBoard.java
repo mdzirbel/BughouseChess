@@ -88,7 +88,7 @@ public class ChessBoard {
             deselect();
             Log.i("CLICK", "Deselecting");
         }
-        checkForGameEnd();
+//        checkForGameEnd();
     }
     private ChessPiece move(ChessPiece[][] moveBoard, int fromX, int fromY, int toX, int toY) {
         ChessPiece takenPiece = null;
@@ -633,7 +633,7 @@ public class ChessBoard {
         boolean hasMoves = false;
         for (int i=0; i<8; i++) {
             for (int j = 0; j < 8; j++) {
-                if (!hasMoves && board[i][j] != null & board[i][j].type.equals(currentPlayer)) {
+                if (!hasMoves && board[i][j] != null && board[i][j].type.equals(currentPlayer)) {
                     ArrayList<Pair<Integer, Integer>> moves = getAllowedMoves(i, j);
                     removeIllegalMoves(moves, i, j);
                     if (moves.size()>0) {
@@ -644,10 +644,10 @@ public class ChessBoard {
         }
         if (!hasMoves) {
             if (isInCheck(currentPlayer, board)) {
-                 MainActivity.coms.checkMate(name.equals("black")?"white":"black");
+                 MainActivity.coms.checkMate(currentPlayer.equals("black")?"white":"black");
             }
             else {
-                MainActivity.coms.staleMate(name.equals("black")?"white":"black");
+                MainActivity.coms.staleMate(currentPlayer.equals("black")?"white":"black");
             }
         }
     }

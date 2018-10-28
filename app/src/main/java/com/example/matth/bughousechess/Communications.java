@@ -220,7 +220,7 @@ public class Communications
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             // Use the Builder class for convenient dialog construction
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            String mess = "Stalemate! "+getArguments().getString("team")+" wins";
+            String mess = "Stalemate!";
             if(getArguments().getBoolean("check"))
             {
                 mess = "Checkmate! "+getArguments().getString("team")+" wins";
