@@ -5,7 +5,7 @@ A bluetooth implementation of Chess variant <a href="https://en.wikipedia.org/wi
 
 The game was created during HACK OHI/O 2018.
 
-Made By:
-Matthew Zirbel - Game Logic
-Stephen Horning - Game Interface + Display
-Max Fojtik - Bluetooth Connection
+Made By:<br>
+Matthew Zirbel - Game Logic<br>
+Stephen Horning - Game Interface + Display<br>
+Max Fojtik - Bluetooth Connection<br>
